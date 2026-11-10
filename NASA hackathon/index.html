@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASTRA: 3D Junior Astronaut Mission Trainer | NASA Space Apps 2026</title>
+  
+  <!-- NASA & Kid-Friendly Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Three.js 3D Engine & Canvas Confetti -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg-space: #020617;
+      --panel-bg: rgba(9, 18, 44, 0.94);
+      --card-bg: rgba(16, 29, 68, 0.88);
+      
+      --nasa-blue: #0b3d91;
+      --nasa-electric: #38bdf8;
+      --artemis-red: #ef4444;
+      --artemis-orange: #f97316;
+      --solar-gold: #fbbf24;
+      --crop-green: #22c55e;
+      --water-cyan: #06b6d4;
+      --nova-purple: #c084fc;
+      
+      --font-main: 'Fredoka', cursive, sans-serif;
+      --font-title: 'Chakra Petch', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-space);
+      color: #ffffff;
+      font-family: var(--font-main);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* 3D WebGL Canvas Layer */
+    #webgl-viewport {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+    }
+
+    /* Screen Splash / NASA Boot Sequence */
+    #nasa-boot-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #020617;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+
+    #nasa-boot-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .boot-logo-circle {
+      width: 130px;
+      height: 130px;
+      background: radial-gradient(circle, #0b3d91 65%, #051636 100%);
+      border-radius: 50%;
+      border: 4px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 50px rgba(56, 189, 248, 0.6);
+      animation: logoPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes logoPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(56, 189, 248, 0.4); }
+      50% { transform: scale(1.06); box-shadow: 0 0 60px rgba(56, 189, 248, 0.8); }
+    }
+
+    .boot-swoosh {
+      position: absolute;
+      width: 150%;
+      height: 6px;
+      background: var(--artemis-red);
+      transform: rotate(-32deg);
+    }
+
+    .boot-logo-text {
+      font-family: var(--font-title);
+      font-weight: 900;
+      font-size: 28px;
+      letter-spacing: 2px;
+      color: #ffffff;
+      z-index: 2;
+    }
+
+    .boot-tagline {
+      font-family: var(--font-title);
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--solar-gold);
+      text-transform: uppercase;
+    }
+
+    .boot-progress-bar {
+      width: 280px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .boot-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #22c55e);
+      border-radius: 4px;
+      animation: bootLoad 2.2s forwards cubic-bezier(0.1, 0.7, 0.1, 1);
+    }
+
+    @keyframes bootLoad {
+      0% { width: 0%; }
+      50% { width: 65%; }
+      100% { width: 100%; }
+    }
+
+    /* Top Universal Header */
+    .top-header {
+      position: absolute;
+      top: 14px;
+      left: 18px;
+      right: 18px;
+      z-index: 40;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .brand-insignia-pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--panel-bg);
+      border: 3px solid var(--nasa-electric);
+      border-radius: 40px;
+      padding: 6px 20px 6px 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .brand-insignia-pill:hover {
+      transform: scale(1.03);
+    }
+
+    .brand-titles h1 {
+      font-family: var(--font-title);
+      font-size: 1.3rem;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      color: #ffffff;
+      line-height: 1;
+    }
+
+    .brand-titles span {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--solar-gold);
+      font-weight: 700;
+    }
+
+    .header-btns {
+      display: flex;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    .btn-hud {
+      background: var(--panel-bg);
+      border: 2px solid var(--nasa-electric);
+      color: #ffffff;
+      font-family: var(--font-main);
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      transition: all 0.2s ease;
+    }
+
+    .btn-hud:hover {
+      background: var(--nasa-blue);
+      border-color: #ffffff;
+      transform: translateY(-2px);
+    }
+
+    /* ============================================================== */
+    /* TOP MINIMAP WITH LABELED SECTORS & STATUS METERS DIRECTLY BELOW */
+    /* ============================================================== */
+    .top-center-hud {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    /* Outpost Schematic Minimap Box */
+    .minimap-container {
+      background: var(--panel-bg);
+      border: 3px solid var(--nasa-electric);
+      border-radius: 20px;
+      padding: 8px 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      width: 440px;
+    }
+
+    .minimap-header {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--solar-gold);
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    #station-minimap-canvas {
+      width: 410px;
+      height: 90px;
+      background: #04091a;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 12px;
+      display: block;
+    }
+
+    /* Telemetry Meters Ribbon DIRECTLY BELOW THE MINIMAP */
+    .meters-row-below-map {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .meter-badge {
+      background: var(--panel-bg);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+    }
+
+    .meter-badge .icon {
+      font-size: 1.3rem;
+    }
+
+    .meter-badge .meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .meter-badge .meta label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .meter-badge .meta strong {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #ffffff;
+    }
+
+    /* Day / Sol Pill */
+    .sol-day-badge {
+      background: var(--panel-bg);
+      border: 3px solid var(--solar-gold);
+      border-radius: 20px;
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 6px 20px rgba(251, 191, 36, 0.35);
+    }
+
+    .sol-day-badge .sol-text {
+      font-family: var(--font-title);
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: var(--solar-gold);
+      line-height: 1;
+    }
+
+    .btn-advance-sol {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border: 2px solid #fef08a;
+      color: #000000;
+      font-family: var(--font-title);
+      font-size: 0.85rem;
+      font-weight: 900;
+      padding: 6px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.6);
+      transition: transform 0.2s ease;
+    }
+
+    .btn-advance-sol:hover {
+      transform: scale(1.06);
+    }
+
+    /* ============================================================== */
+    /* IN-GAME TO-DO LIST & QUEST HUD                                 */
+    /* ============================================================== */
+    .todo-quest-hud {
+      position: absolute;
+      top: 140px;
+      right: 20px;
+      z-index: 35;
+      background: var(--panel-bg);
+      border: 3px solid var(--solar-gold);
+      border-radius: 20px;
+      padding: 14px 18px;
+      width: 320px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: slideInRight 0.3s ease;
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(40px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .todo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid rgba(251, 191, 36, 0.3);
+      padding-bottom: 6px;
+    }
+
+    .todo-header h3 {
+      font-family: var(--font-title);
+      font-size: 1.05rem;
+      color: var(--solar-gold);
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.88rem;
+      line-height: 1.35;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: background 0.15s ease;
+    }
+
+    .todo-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .todo-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--solar-gold);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      color: #000000;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .todo-item.done .todo-checkbox {
+      background: var(--crop-green);
+      border-color: var(--crop-green);
+      color: #ffffff;
+    }
+
+    .todo-item.done .todo-text {
+      text-decoration: line-through;
+      color: #94a3b8;
+    }
+
+    /* Active Science & Weather Status */
+    .science-status-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .science-status-box strong {
+      font-family: var(--font-title);
+      color: var(--nasa-electric);
+      font-size: 0.85rem;
+    }
+
+    /* ============================================================== */
+    /* BOTTOM HUD: CHEERFUL NOVA ROBOT & INTERACTIVE PROMPT           */
+    /* ============================================================== */
+    .bottom-hud {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      z-index: 35;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      pointer-events: none;
+    }
+
+    .nova-assistant-card {
+      background: var(--panel-bg);
+      border: 3px solid var(--nova-purple);
+      border-radius: 24px;
+      padding: 12px 18px;
+      max-width: 460px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 10px 30px rgba(192, 132, 252, 0.3);
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+      animation: floatNova 3s infinite ease-in-out;
+    }
+
+    @keyframes floatNova {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    .nova-face {
+      width: 58px;
+      height: 58px;
+      background: radial-gradient(circle, #c084fc 35%, #7e22ce 100%);
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      box-shadow: 0 0 20px rgba(192, 132, 252, 0.9);
+      flex-shrink: 0;
+    }
+
+    .nova-msg-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nova-msg-wrap strong {
+      font-family: var(--font-title);
+      font-size: 0.92rem;
+      color: #f3e8ff;
+      letter-spacing: 0.5px;
+    }
+
+    .nova-msg-wrap p {
+      font-size: 0.9rem;
+      color: #ffffff;
+      line-height: 1.35;
+    }
+
+    /* Floating Interaction Prompt */
+    #interact-prompt {
+      background: linear-gradient(135deg, #0b3d91, #0284c7);
+      border: 3px solid var(--solar-gold);
+      border-radius: 30px;
+      padding: 10px 24px;
+      font-family: var(--font-title);
+      font-size: 1.05rem;
+      font-weight: 900;
+      color: #ffffff;
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.9);
+      display: none;
+      pointer-events: auto;
+      cursor: pointer;
+      animation: promptBounce 1.2s infinite ease-in-out;
+    }
+
+    @keyframes promptBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    /* Walk / Directional Touch Controls */
+    .touch-wasd-pad {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 35;
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .touch-key {
+      width: 52px;
+      height: 50px;
+      background: var(--panel-bg);
+      border: 2px solid var(--nasa-electric);
+      border-radius: 14px;
+      color: #ffffff;
+      font-family: var(--font-title);
+      font-size: 1.2rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .touch-key:active {
+      transform: scale(0.92);
+      background: #0284c7;
+    }
+
+    /* Incoming NASA Mission Dispatch / Teletype Modal */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(2, 6, 23, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-dialog {
+      background: #081028;
+      border: 3px solid var(--nasa-electric);
+      border-radius: 24px;
+      padding: 24px 28px;
+      max-width: 740px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: popModal 0.25s ease-out;
+    }
+
+    @keyframes popModal {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header-tag {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid rgba(56, 189, 248, 0.3);
+      padding-bottom: 8px;
+    }
+
+    .modal-header-tag h2 {
+      font-family: var(--font-title);
+      font-size: 1.4rem;
+      color: var(--solar-gold);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-body-text {
+      font-size: 1rem;
+      line-height: 1.55;
+      color: #e2e8f0;
+    }
+
+    .modal-actions-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    /* Floating Toast Feedback */
+    .toast-pill {
+      position: fixed;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 99;
+      background: var(--panel-bg);
+      border: 3px solid var(--solar-gold);
+      border-radius: 30px;
+      padding: 16px 32px;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #ffffff;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.85);
+      pointer-events: none;
+      animation: floatUpToast 1.2s forwards ease-out;
+    }
+
+    @keyframes floatUpToast {
+      0% { transform: translate(-50%, 0) scale(0.7); opacity: 0; }
+      20% { transform: translate(-50%, -15px) scale(1.1); opacity: 1; }
+      80% { transform: translate(-50%, -35px) scale(1); opacity: 1; }
+      100% { transform: translate(-50%, -55px) scale(0.9); opacity: 0; }
+    }
+
+    /* Diploma Canvas */
+    #diploma-canvas {
+      width: 100%;
+      max-width: 700px;
+      aspect-ratio: 1.414 / 1;
+      border: 4px solid var(--solar-gold);
+      border-radius: 12px;
+      margin: 8px auto;
+      display: block;
+    }
+
+    /* Keep the mission HUD legible on laptop and small browser windows. */
+    @media (max-width: 1400px) {
+      .top-center-hud { top: 12px; gap: 5px; }
+      .minimap-container { width: 340px; padding: 6px 10px; border-width: 2px; }
+      #station-minimap-canvas { width: 310px; height: 68px; }
+      .minimap-header { font-size: 0.56rem; letter-spacing: 0.5px; }
+      .meters-row-below-map { max-width: 690px; gap: 5px; }
+      .meter-badge { padding: 4px 8px; gap: 5px; border-radius: 12px; }
+      .meter-badge .icon { font-size: 1rem; }
+      .meter-badge .meta label { font-size: 0.52rem; }
+      .meter-badge .meta strong { font-size: 0.72rem; }
+      .sol-day-badge { padding: 4px 12px; border-width: 2px; }
+      .sol-day-badge .sol-text { font-size: 1.05rem; }
+      .btn-advance-sol { padding: 5px 10px; font-size: 0.75rem; }
+      .todo-quest-hud { top: 122px; right: 14px; width: 270px; padding: 10px 12px; gap: 7px; border-width: 2px; }
+      .todo-item { font-size: 0.78rem; }
+      .science-status-box { font-size: 0.72rem; }
+      .science-status-box strong { font-size: 0.76rem; }
+      .nova-assistant-card { max-width: 385px; padding: 9px 12px; gap: 10px; }
+      .nova-face { width: 48px; height: 48px; font-size: 1.5rem; }
+      .nova-msg-wrap p { font-size: 0.78rem; }
+      .touch-wasd-pad { bottom: 14px; gap: 6px; }
+      .touch-key { width: 44px; height: 44px; }
+    }
+
+    @media (max-width: 1050px) {
+      .top-center-hud { left: 50%; top: 88px; }
+      .minimap-container { width: 290px; }
+      #station-minimap-canvas { width: 260px; height: 58px; }
+      .meters-row-below-map { max-width: 520px; }
+      .todo-quest-hud { top: 168px; width: 230px; max-height: 48vh; overflow-y: auto; }
+      .brand-insignia-pill { padding: 5px 10px; gap: 7px; }
+      .brand-titles h1 { font-size: 1rem; }
+      .header-btns { gap: 5px; }
+      .btn-hud { padding: 6px 9px; font-size: 0.78rem; }
+      .nova-assistant-card { max-width: 330px; }
+      .nova-msg-wrap p { font-size: 0.72rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 3D Canvas Viewport -->
+  <div id="webgl-viewport"></div>
+
+  <!-- NASA Startup Boot Screen -->
+  <div id="nasa-boot-screen">
+    <div class="boot-logo-circle">
+      <div class="boot-swoosh"></div>
+      <span class="boot-logo-text">NASA</span>
+    </div>
+    <div class="boot-tagline">ASTRA: JUNIOR ASTRONAUT TRAINER</div>
+    <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #94a3b8;">
+      Initializing 3D Space Station &bull; DONKI Telemetry Sync...
+    </div>
+    <div class="boot-progress-bar">
+      <div class="boot-progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- Universal Top Header -->
+  <header class="top-header">
+    <div class="brand-insignia-pill" onclick="SpaceApp.resetAstronautPos()">
+      <div style="width: 38px; height: 38px; background: radial-gradient(circle, #0b3d91 65%, #051636 100%); border-radius: 50%; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+        <div style="position: absolute; width: 140%; height: 3px; background: #ef4444; transform: rotate(-30deg);"></div>
+        <span style="font-family: var(--font-title); font-size: 11px; font-weight: 900; z-index: 2;">NASA</span>
+      </div>
+      <div class="brand-titles">
+        <h1 id="outpost-title">Starbridge Station</h1>
+        <span id="outpost-planet-tag">LUNAR ORBIT &bull; 0.166 G</span>
+      </div>
+    </div>
+
+    <div class="header-btns">
+      <button class="btn-hud" onclick="SpaceApp.switchWorld()">
+        <span id="btn-world-icon">🌕</span> <span id="btn-world-text">Switch to Mars</span>
+      </button>
+      <button class="btn-hud" style="border-color: var(--solar-gold); color: var(--solar-gold);" onclick="SpaceApp.openDiploma()">
+        <span>🎓</span> Diploma
+      </button>
+      <button class="btn-hud" id="btn-audio-mute" onclick="SpaceApp.toggleSound()">
+        <span>🔊</span> Audio
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================================================== -->
+  <!-- TOP CENTER MINIMAP & STATUS METERS DIRECTLY BELOW              -->
+  <!-- ============================================================== -->
+  <div class="top-center-hud">
+    <!-- Minimap Box -->
+    <div class="minimap-container">
+      <div class="minimap-header">
+        <span>📍 OUTPOST SECTOR RADAR SCHEMATIC</span>
+        <span id="minimap-current-room">ROOM: CENTRAL COMMAND</span>
+      </div>
+      <canvas id="station-minimap-canvas" width="410" height="90"></canvas>
+    </div>
+
+    <!-- Status Meters directly below the minimap -->
+    <div class="meters-row-below-map">
+      <!-- Air -->
+      <div class="meter-badge">
+        <span class="icon">🫁</span>
+        <div class="meta">
+          <label>OXYGEN</label>
+          <strong id="val-o2" style="color: var(--crop-green);">98% (21 kPa)</strong>
+        </div>
+      </div>
+
+      <!-- Water -->
+      <div class="meter-badge">
+        <span class="icon">💧</span>
+        <div class="meta">
+          <label>WATER</label>
+          <strong id="val-water" style="color: var(--water-cyan);">420 L</strong>
+        </div>
+      </div>
+
+      <!-- Food -->
+      <div class="meter-badge">
+        <span class="icon">🍓</span>
+        <div class="meta">
+          <label>FOOD</label>
+          <strong id="val-food" style="color: #f43f5e;">185 kg</strong>
+        </div>
+      </div>
+
+      <!-- Power -->
+      <div class="meter-badge">
+        <span class="icon">⚡</span>
+        <div class="meta">
+          <label>POWER</label>
+          <strong id="val-power" style="color: var(--solar-gold);">92 kW</strong>
+        </div>
+      </div>
+
+      <!-- Radiation Shield -->
+      <div class="meter-badge">
+        <span class="icon">🛡️</span>
+        <div class="meta">
+          <label>RAD SHIELD</label>
+          <strong id="val-rad" style="color: var(--nova-purple);">100% (SAFE)</strong>
+        </div>
+      </div>
+
+      <!-- Crew Morale -->
+      <div class="meter-badge">
+        <span class="icon">❤️</span>
+        <div class="meta">
+          <label>MORALE</label>
+          <strong id="val-morale" style="color: #ec4899;">95%</strong>
+        </div>
+      </div>
+
+      <!-- Sol / Day Pill -->
+      <div class="sol-day-badge">
+        <div class="sol-text">
+          SOL <span id="val-sol">01</span> / 10
+        </div>
+        <button class="btn-advance-sol" onclick="SpaceApp.advanceDay()">
+          NEXT SOL &rarr;
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- DAILY TO-DO LIST & QUEST HUD                                   -->
+  <!-- ============================================================== -->
+  <aside class="todo-quest-hud">
+    <div class="todo-header">
+      <h3>📋 DAILY ASTRONAUT TO-DO LIST</h3>
+      <span style="font-family: var(--font-mono); font-size: 0.72rem; color: #94a3b8;">TODAY</span>
+    </div>
+
+    <div class="todo-list">
+      <!-- Task 1: Morning Check -->
+      <div class="todo-item" id="task-1" onclick="SpaceApp.completeTask(1)">
+        <div class="todo-checkbox" id="chk-1">✓</div>
+        <div class="todo-text">1. Morning Telemetry & Vital Checks</div>
+      </div>
+
+      <!-- Task 2: ARED Workout -->
+      <div class="todo-item" id="task-2" onclick="SpaceApp.completeTask(2)">
+        <div class="todo-checkbox" id="chk-2"></div>
+        <div class="todo-text">2. 2-Hour ARED Gym Workout (Stop Bone Loss!)</div>
+      </div>
+
+      <!-- Task 3: Strawberries -->
+      <div class="todo-item" id="task-3" onclick="SpaceApp.completeTask(3)">
+        <div class="todo-checkbox" id="chk-3"></div>
+        <div class="todo-text">3. Harvest Strawberries in Food Dome</div>
+      </div>
+
+      <!-- Task 4: ECLSS Recycling -->
+      <div class="todo-item" id="task-4" onclick="SpaceApp.completeTask(4)">
+        <div class="todo-checkbox" id="chk-4"></div>
+        <div class="todo-text">4. Cycle ECLSS Water Distillation Filters</div>
+      </div>
+
+      <!-- Task 5: Comms Check -->
+      <div class="todo-item" id="task-5" onclick="SpaceApp.completeTask(5)">
+        <div class="todo-checkbox" id="chk-5"></div>
+        <div class="todo-text">5. Evening NASA Houston Dispatch Uplink</div>
+      </div>
+    </div>
+
+    <!-- Live NASA DONKI & Science Experiment Box -->
+    <div class="science-status-box">
+      <strong>🔬 SCIENCE EXPERIMENT:</strong>
+      <span id="experiment-text">Seed Geotropism in Low Gravity (0.166g)</span>
+      <strong style="margin-top: 4px;">☀️ NASA DONKI SPACE WEATHER:</strong>
+      <span id="donki-weather-text" style="color: var(--crop-green);">SOLAR FLUX NORMAL &bull; SDO AIA 193Å NOMINAL</span>
+    </div>
+  </aside>
+
+  <!-- ============================================================== -->
+  <!-- BOTTOM HUD: NOVA ROBOT ASSISTANT & INTERACTION PROMPT          -->
+  <!-- ============================================================== -->
+  <div class="bottom-hud">
+    <div class="nova-assistant-card">
+      <div class="nova-face">🤖</div>
+      <div class="nova-msg-wrap">
+        <strong>NOVA &bull; NASA FLIGHT COMPANION</strong>
+        <p id="nova-dialogue">
+          Beep-Boop! Welcome aboard Starbridge Station, Cadet! Use W-A-S-D to walk through the corridors, or click the prompt when near a station module!
+        </p>
+      </div>
+    </div>
+
+    <div id="interact-prompt" onclick="SpaceApp.triggerInteract()">
+      PRESS [E] TO INTERACT
+    </div>
+  </div>
+
+  <!-- Onscreen Directional WASD Touch Pad for Kids -->
+  <div class="touch-wasd-pad">
+    <button class="touch-key" id="btn-w">W</button>
+    <button class="touch-key" id="btn-a">A</button>
+    <button class="touch-key" id="btn-s">S</button>
+    <button class="touch-key" id="btn-d">D</button>
+    <button class="touch-key" id="btn-space" style="background:#0b3d91;">🦘</button>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- NASA MISSION CONTROL DISPATCH MODAL                            -->
+  <!-- ============================================================== -->
+  <div id="modal-dispatch" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header-tag">
+        <h2><span>📡</span> INCOMING TRANSMISSION: NASA JOHNSON SPACE CENTER</h2>
+        <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--solar-gold);">HOUSTON CAPCOM &bull; ENCRYPTED</span>
+      </div>
+      <div id="dispatch-body" class="modal-body-text">
+        Cadet Commander Alex, this is Houston Flight Director. We have received your morning telemetry. Your closed-loop life support is operating at high efficiency. Proceed with your daily schedule!
+      </div>
+      <div id="dispatch-choices" style="display: flex; gap: 10px; margin-top: 8px;"></div>
+      <div class="modal-actions-row">
+        <button class="btn-hud" style="background: var(--nasa-blue);" onclick="SpaceApp.closeDispatch()">Acknowledge & Close &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- DIPLOMA MODAL                                                  -->
+  <!-- ============================================================== -->
+  <div id="modal-diploma" class="modal-backdrop">
+    <div class="modal-dialog" style="text-align: center; max-width: 780px;">
+      <div class="modal-header-tag" style="justify-content: center;">
+        <h2 style="color: var(--solar-gold);">🎓 OFFICIAL NASA SPACE APPS COMMANDER DIPLOMA</h2>
+      </div>
+      <canvas id="diploma-canvas"></canvas>
+      <div style="display: flex; justify-content: center; gap: 12px; margin-top: 6px;">
+        <input id="cadet-name-input" type="text" value="Commander Alex" style="background:#04091a; border:2px solid var(--nasa-electric); border-radius:10px; color:#fff; font-family:var(--font-title); font-size:1.1rem; padding:8px 16px; text-align:center;" oninput="SpaceApp.renderDiploma()">
+        <button class="btn-hud" style="background: var(--nasa-blue); border-color: var(--solar-gold);" onclick="SpaceApp.downloadDiploma()">📥 Download PNG</button>
+        <button class="btn-hud" onclick="SpaceApp.closeDiploma()">&times; Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- 3D THREE.JS WORLD & RIGID WALL COLLISION ENGINE                -->
+  <!-- ============================================================== -->
+  <script src="js/scene-visuals.js"></script>
+  <script>
+    // Audio Synthesizer
+    class SoundCore {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+      init() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) this.ctx = new AC();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+      }
+      beep(freq, dur = 0.12, type = 'sine') {
+        if (this.muted) return;
+        this.init();
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(0.22, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + dur);
+        } catch(e) {}
+      }
+      nasaChime() {
+        this.beep(587, 0.08, 'triangle');
+        setTimeout(() => this.beep(880, 0.14, 'triangle'), 80);
+      }
+      cheer() {
+        const notes = [440, 554, 659, 880];
+        notes.forEach((n, i) => setTimeout(() => this.beep(n, 0.2, 'triangle'), i * 110));
+      }
+      alert() {
+        this.beep(480, 0.18, 'sawtooth');
+        setTimeout(() => this.beep(960, 0.22, 'sawtooth'), 160);
+      }
+    }
+    const sfx = new SoundCore();
+
+    // Game Master State
+    const SpaceApp = {
+      planet: 'moon',
+      sol: 1,
+      maxSols: 10,
+      
+      o2: 98,
+      water: 420,
+      food: 185,
+      power: 92,
+      radShield: 100,
+      morale: 95,
+
+      // To-Do list state
+      tasksDone: { 1: true, 2: false, 3: false, 4: false, 5: false },
+      
+      // Delayed consequences tracker
+      delayedEffects: {},
+
+      init() {
+        // Hide boot screen after 2.4s
+        setTimeout(() => {
+          const boot = document.getElementById('nasa-boot-screen');
+          if (boot) boot.classList.add('hidden');
+          sfx.nasaChime();
+        }, 2200);
+
+        this.updateHUD();
+        this.renderMinimap();
+      },
+
+      toggleSound() {
+        sfx.muted = !sfx.muted;
+        document.getElementById('btn-audio-mute').innerHTML = sfx.muted ? '<span>🔇</span> Muted' : '<span>🔊</span> Audio';
+      },
+
+      toast(msg) {
+        sfx.nasaChime();
+        const t = document.createElement('div');
+        t.className = 'toast-pill';
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 1200);
+      },
+
+      setNova(text) {
+        document.getElementById('nova-dialogue').textContent = text;
+      },
+
+      switchWorld() {
+        this.planet = (this.planet === 'moon') ? 'mars' : 'moon';
+        const isMoon = (this.planet === 'moon');
+        document.getElementById('btn-world-icon').textContent = isMoon ? '🌕' : '🔴';
+        document.getElementById('btn-world-text').textContent = isMoon ? 'Switch to Mars' : 'Switch to Moon';
+        document.getElementById('outpost-planet-tag').textContent = isMoon ? 'LUNAR SHACKLETON &bull; 0.166 G' : 'MARS JEZERO CRATER &bull; 0.38 G';
+        document.getElementById('experiment-text').textContent = isMoon ? 'Seed Geotropism in Low Gravity (0.166g)' : 'Atmospheric Argon Filtration (0.38g)';
+        
+        Station3D.setupPlanetEnvironment(this.planet);
+        this.toast(`Arrived at ${isMoon ? 'Moon' : 'Mars'} Outpost!`);
+        this.setNova(`Welcome to ${isMoon ? 'the Moon' : 'Mars'}! Notice how the outside terrain, gravity, and sky changed!`);
+      },
+
+      completeTask(id) {
+        if (this.tasksDone[id]) return;
+        this.tasksDone[id] = true;
+        sfx.cheer();
+
+        const el = document.getElementById(`task-${id}`);
+        const chk = document.getElementById(`chk-${id}`);
+        if (el) el.classList.add('done');
+        if (chk) chk.textContent = '✓';
+
+        if (id === 2) {
+          // ARED Workout
+          this.morale = Math.min(100, this.morale + 15);
+          this.toast('🏋️ ARED WORKOUT COMPLETED! +15 MORALE');
+          this.showDispatch(
+            "Dr. Priya (Flight Surgeon)",
+            "Fantastic work on the ARED resistance machine, Cadet! In space, without Earth's gravity pulling on our muscles, human bones lose 1% to 2% of their density every single month! That is why astronauts exercise 2 hours every day to stay strong for when they return home!"
+          );
+        } else if (id === 3) {
+          // Strawberries
+          this.food += 25;
+          this.o2 = Math.min(100, this.o2 + 4);
+          this.toast('🍓 STRAWBERRIES HARVESTED! +25 FOOD');
+          this.setNova("Yum! Fresh crunchy space strawberries picked! Eating fresh greens prevents astronaut menu fatigue and cleans CO2!");
+        } else if (id === 4) {
+          // ECLSS
+          this.water += 30;
+          this.toast('💧 WATER RECOVERY RECYCLED! +30 WATER');
+          this.setNova("Pssh-glug! Catalytic filters cycled. 98% of all water recovered for drinking!");
+        } else if (id === 5) {
+          // Comms
+          this.showDispatch(
+            "Flight Director Maya (NASA Houston)",
+            "Telemetry confirmed, Cadet Alex! All life-support systems are nominal. You are making NASA proud! Stay vigilant for incoming DONKI space weather updates."
+          );
+        }
+
+        this.updateHUD();
+      },
+
+      advanceDay() {
+        if (this.sol >= this.maxSols) {
+          this.victory();
+          return;
+        }
+
+        this.sol++;
+        sfx.nasaChime();
+
+        // Reset tasks for the new Sol
+        this.tasksDone = { 1: true, 2: false, 3: false, 4: false, 5: false };
+        for (let i = 2; i <= 5; i++) {
+          const el = document.getElementById(`task-${i}`);
+          const chk = document.getElementById(`chk-${i}`);
+          if (el) el.classList.remove('done');
+          if (chk) chk.textContent = '';
+        }
+
+        // Daily drops
+        this.o2 = Math.max(15, this.o2 - 3);
+        this.water = Math.max(20, this.water - 14);
+        this.food = Math.max(20, this.food - 6);
+
+        // Apply delayed consequences if any
+        if (this.delayedEffects['greenhouse_wither'] && this.sol >= this.delayedEffects['greenhouse_wither']) {
+          this.food = Math.max(10, this.food - 20);
+          Station3D.witherPlants(true);
+          this.toast("⚠️ DELAYED CONSEQUENCE: Crops withered from cold!");
+          this.setNova("Because power was diverted two days ago, the strawberry planter beds went cold and withered!");
+        }
+
+        // Story Events
+        if (this.sol === 4) {
+          // Solar storm event from NASA DONKI
+          sfx.alert();
+          document.getElementById('donki-weather-text').innerHTML = `<span style="color:#ef4444;">🚨 CORONAL MASS EJECTION INBOUND &bull; FLR CLASS M8.2</span>`;
+          Station3D.triggerSolarStormVisual(true);
+          this.showDispatch(
+            "NASA DONKI Space Weather Satellite Alert",
+            "🚨 CRITICAL SOLAR WEATHER WARNING: SDO satellite detected an M8.2-class Coronal Mass Ejection heading directly towards our sector! High-energy proton radiation is arriving! Look out the station observation windows to see the solar plasma! What is your command?",
+            [
+              {
+                title: "Option A: Fortify Radiation Storm Bunker",
+                action: () => {
+                  SpaceApp.radShield = 100;
+                  SpaceApp.delayedEffects['greenhouse_wither'] = SpaceApp.sol + 2; // Delayed effect!
+                  SpaceApp.toast("🛡️ CREW SHELTERED! CROPS MAY WITHER LATER.");
+                  SpaceApp.setNova("Crew safe in regolith bunker! Shielding absorbed the solar storm!");
+                  SpaceApp.closeDispatch();
+                }
+              },
+              {
+                title: "Option B: Shield Hydroponics Greenhouse",
+                action: () => {
+                  SpaceApp.food += 30;
+                  SpaceApp.radShield = 60;
+                  SpaceApp.toast("🍓 CROPS SAVED! RADIATION ELEVATED.");
+                  SpaceApp.setNova("Greenhouse heaters held! Strawberry crops thriving, but crew took higher radiation dose.");
+                  SpaceApp.closeDispatch();
+                }
+              }
+            ]
+          );
+        } else if (this.sol === 7) {
+          this.toast("🚜 ROVER CRATER ICE EXPEDITION!");
+          this.water += 40;
+          this.setNova("The 6-wheel Scoop rover drilled subterranean ice in Shackleton Crater! Water reserves replenished!");
+        } else if (this.sol === 9) {
+          this.setNova("Sol 9! Tomorrow our Mars exploration rocket launches! Complete all tasks on your To-Do list!");
+        } else {
+          Station3D.triggerSolarStormVisual(false);
+          document.getElementById('donki-weather-text').innerHTML = `<span style="color:#22c55e;">SOLAR FLUX NORMAL &bull; SDO NOMINAL</span>`;
+          this.setNova(`Sol ${this.sol} dawn. Life-support scrubbers are active. Check your daily To-Do list!`);
+        }
+
+        this.updateHUD();
+
+        if (this.sol >= this.maxSols) {
+          setTimeout(() => this.victory(), 1000);
+        }
+      },
+
+      updateHUD() {
+        document.getElementById('val-sol').textContent = this.sol < 10 ? `0${this.sol}` : this.sol;
+        document.getElementById('val-o2').textContent = `${Math.round(this.o2)}% (${Math.round(this.o2 * 0.21)} kPa)`;
+        document.getElementById('val-water').textContent = `${Math.round(this.water)} L`;
+        document.getElementById('val-food').textContent = `${Math.round(this.food)} kg`;
+        document.getElementById('val-power').textContent = `${Math.round(this.power)} kW`;
+        document.getElementById('val-rad').textContent = this.radShield > 70 ? `${this.radShield}% (SAFE)` : `${this.radShield}% (ELEVATED)`;
+        document.getElementById('val-rad').style.color = this.radShield > 70 ? 'var(--nova-purple)' : 'var(--artemis-red)';
+        document.getElementById('val-morale').textContent = `${Math.round(this.morale)}%`;
+      },
+
+      victory() {
+        sfx.cheer();
+        if (window.confetti) confetti({ particleCount: 160, spread: 90, origin: { y: 0.6 } });
+        this.toast('🎉 10 SOLS SURVIVED! MISSION ACCOMPLISHED!');
+        this.setNova("MISSION COMPLETE! You have proved that young astronauts can command a sustainable space outpost!");
+        setTimeout(() => this.openDiploma(), 1500);
+      },
+
+      showDispatch(header, text, choices = []) {
+        sfx.nasaChime();
+        const modal = document.getElementById('modal-dispatch');
+        modal.querySelector('h2').textContent = header;
+        document.getElementById('dispatch-body').textContent = text;
+        
+        const cWrap = document.getElementById('dispatch-choices');
+        cWrap.innerHTML = '';
+        if (choices.length > 0) {
+          choices.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-hud';
+            btn.style.background = '#1e3a8a';
+            btn.style.borderColor = 'var(--solar-gold)';
+            btn.textContent = c.title;
+            btn.onclick = c.action;
+            cWrap.appendChild(btn);
+          });
+        }
+        modal.classList.add('active');
+      },
+
+      closeDispatch() {
+        document.getElementById('modal-dispatch').classList.remove('active');
+      },
+
+      openDiploma() {
+        sfx.nasaChime();
+        document.getElementById('modal-diploma').classList.add('active');
+        this.renderDiploma();
+      },
+
+      closeDiploma() {
+        document.getElementById('modal-diploma').classList.remove('active');
+      },
+
+      renderDiploma() {
+        const canvas = document.getElementById('diploma-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = 1000;
+        canvas.height = 700;
+
+        const grad = ctx.createLinearGradient(0, 0, 1000, 700);
+        grad.addColorStop(0, '#0a1128');
+        grad.addColorStop(1, '#020617');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1000, 700);
+
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 12;
+        ctx.strokeRect(20, 20, 960, 660);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(34, 34, 932, 632);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 22px "Chakra Petch"';
+        ctx.fillText("NATIONAL AERONAUTICS AND SPACE ADMINISTRATION", 500, 90);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 38px "Chakra Petch"';
+        ctx.fillText("COMMISSION OF 3D BASE COMMANDER", 500, 145);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 20px "Fredoka"';
+        ctx.fillText("This official diploma certifies that Junior Astronaut Cadet:", 500, 195);
+
+        const name = (document.getElementById('cadet-name-input').value || "COMMANDER ALEX").toUpperCase();
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = '900 46px "Chakra Petch"';
+        ctx.fillText(name, 500, 260);
+
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '500 18px "Fredoka"';
+        ctx.fillText("Has mastered 3D space station navigation, daily ARED resistive bone-loss prevention,", 500, 320);
+        ctx.fillText("closed-loop ECLSS water recycling, and operational NASA DONKI space weather defense.", 500, 355);
+
+        ctx.fillStyle = '#22c55e';
+        ctx.font = 'bold 24px "Chakra Petch"';
+        ctx.fillText("RANK: NASA GOLD SPACE BASE COMMANDER 🌟", 500, 420);
+
+        const badges = [
+          { l: "AIR MASTER", i: "🫁" },
+          { l: "WATER HERO", i: "💧" },
+          { l: "ARED FITNESS", i: "🏋️" },
+          { l: "SOLAR GUARDIAN", i: "☀️" }
+        ];
+        badges.forEach((b, i) => {
+          const bx = 200 + i * 200;
+          ctx.fillStyle = '#172554';
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(bx, 505, 40, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.font = '30px sans-serif';
+          ctx.fillText(b.i, bx, 516);
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 12px "Chakra Petch"';
+          ctx.fillText(b.l, bx, 570);
+        });
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'italic 16px "Fredoka"';
+        ctx.fillText("Commander Maya • NASA Flight Director", 300, 630);
+        ctx.fillText("NOVA Robot • Base Assistant", 700, 630);
+        ctx.strokeStyle = '#475569';
+        ctx.beginPath();
+        ctx.moveTo(180, 610); ctx.lineTo(420, 610);
+        ctx.moveTo(580, 610); ctx.lineTo(820, 610);
+        ctx.stroke();
+      },
+
+      downloadDiploma() {
+        const canvas = document.getElementById('diploma-canvas');
+        if (!canvas) return;
+        const a = document.createElement('a');
+        a.download = "NASA_3D_Astronaut_Diploma.png";
+        a.href = canvas.toDataURL();
+        a.click();
+      },
+
+      resetAstronautPos() {
+        if (Station3D.cadet) Station3D.cadet.position.set(0, 1.2, 0);
+      },
+
+      triggerInteract() {
+        if (Station3D.activeInteractAction) {
+          Station3D.activeInteractAction();
+        }
+      },
+
+      // Render Top Schematic Minimap
+      renderMinimap() {
+        const canvas = document.getElementById('station-minimap-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, 410, 90);
+
+        // Center map origin at (205, 45)
+        const ox = 205;
+        const oy = 45;
+        const scale = 2.4;
+
+        // Modules Layout
+        const rooms = [
+          { name: "AIRLOCK", x: -40, z: 0, w: 12, h: 10, col: "#f59e0b" },
+          { name: "ECLSS WATER", x: -22, z: 0, w: 12, h: 12, col: "#0284c7" },
+          { name: "COMMAND", x: 0, z: 0, w: 14, h: 14, col: "#38bdf8" },
+          { name: "FOOD DOME", x: 24, z: 0, w: 14, h: 12, col: "#10b981" },
+          { name: "ARED GYM", x: 0, z: 22, w: 12, h: 12, col: "#a855f7" },
+          { name: "SOLAR FARM", x: 0, z: -22, w: 16, h: 8, col: "#fbbf24" }
+        ];
+
+        // Draw connecting corridors
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(ox - 40 * scale, oy); ctx.lineTo(ox + 24 * scale, oy);
+        ctx.moveTo(ox, oy - 22 * scale); ctx.lineTo(ox, oy + 22 * scale);
+        ctx.stroke();
+
+        // Draw room boxes
+        rooms.forEach(r => {
+          const rx = ox + r.x * scale - (r.w * scale) / 2;
+          const ry = oy + r.z * scale - (r.h * scale) / 2;
+          ctx.fillStyle = '#0f172a';
+          ctx.strokeStyle = r.col;
+          ctx.lineWidth = 2;
+          ctx.fillRect(rx, ry, r.w * scale, r.h * scale);
+          ctx.strokeRect(rx, ry, r.w * scale, r.h * scale);
+
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = 'bold 7px "Space Mono"';
+          ctx.textAlign = 'center';
+          ctx.fillText(r.name, ox + r.x * scale, oy + r.z * scale + 3);
+        });
+
+        // Draw player dot
+        if (Station3D.cadet) {
+          const px = ox + Station3D.cadet.position.x * scale;
+          const py = oy + Station3D.cadet.position.z * scale;
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.arc(px, py, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      }
+    };
+
+    // ==============================================================
+    // FULL 3D INTERACTIVE STATION WITH PHYSICAL WALL COLLISIONS
+    // ==============================================================
+    const Station3D = {
+      scene: null,
+      camera: null,
+      renderer: null,
+      cadet: null,
+      earthGlobe: null,
+      sunLight: null,
+      terrainMesh: null,
+      solarStormParticles: null,
+      activeInteractAction: null,
+
+      // Locomotion & Physics
+      velocity: new THREE.Vector3(),
+      isGrounded: true,
+      keys: {},
+
+      // Collision Boxes (Allowed walkable zones / walls)
+      // Stations are designed as bounded boxes so cadet CANNOT walk through walls!
+      rooms: [
+        { name: "CENTRAL COMMAND", minX: -7, maxX: 7, minZ: -7, maxZ: 7 },
+        { name: "HYDRO DOME", minX: 17, maxX: 31, minZ: -6, maxZ: 6 },
+        { name: "ECLSS WATER", minX: -29, maxX: -15, minZ: -6, maxZ: 6 },
+        { name: "ARED GYM", minX: -6, maxX: 6, minZ: 16, maxZ: 28 },
+        { name: "SOLAR FARM", minX: -8, maxX: 8, minZ: -26, maxZ: -16 },
+        { name: "AIRLOCK BAY", minX: -46, maxX: -34, minZ: -5, maxZ: 5 },
+        // Connecting Tunnels
+        { name: "TUNNEL EAST", minX: 7, maxX: 17, minZ: -2, maxZ: 2 },
+        { name: "TUNNEL WEST", minX: -15, maxX: -7, minZ: -2, maxZ: 2 },
+        { name: "TUNNEL AIRLOCK", minX: -34, maxX: -29, minZ: -2, maxZ: 2 },
+        { name: "TUNNEL NORTH", minX: -2, maxX: 2, minZ: 7, maxZ: 16 },
+        { name: "TUNNEL SOUTH", minX: -2, maxX: 2, minZ: -16, maxZ: -7 },
+        // Exterior Surface outside airlock
+        { name: "EXTERIOR CRATER SURFACE", minX: -100, maxX: -46, minZ: -30, maxZ: 30 }
+      ],
+
+      init() {
+        const container = document.getElementById('webgl-viewport');
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x020617);
+        this.scene.fog = new THREE.FogExp2(0x020617, 0.0035);
+
+        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera.position.set(0, 7, -14);
+
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(this.renderer.domElement);
+
+        window.addEventListener('resize', () => {
+          this.camera.aspect = window.innerWidth / window.innerHeight;
+          this.camera.updateProjectionMatrix();
+          this.renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Ambient & Directional Sun Lighting
+        const ambient = new THREE.AmbientLight(0xffffff, 0.65);
+        this.scene.add(ambient);
+
+        this.sunLight = new THREE.DirectionalLight(0xfff8ea, 1.6);
+        this.sunLight.position.set(60, 80, -50);
+        this.sunLight.castShadow = true;
+        this.scene.add(this.sunLight);
+
+        // Build 3D Station & Environment
+        this.buildCelestialBackdrop();
+        this.buildStationModules();
+        this.spawnCadetAstronaut();
+        this.setupPlanetEnvironment('moon');
+        if (window.StarbridgeVisuals) window.StarbridgeVisuals.decorate(this);
+
+        // Keyboard & Touch Listeners
+        window.addEventListener('keydown', (e) => {
+          this.keys[e.code] = true;
+          if (e.code === 'KeyE') SpaceApp.triggerInteract();
+          if (e.code === 'Space') this.jump();
+        });
+        window.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
+
+        // Touch button bindings
+        const bindKey = (id, code) => {
+          const btn = document.getElementById(id);
+          btn.onpointerdown = () => { this.keys[code] = true; };
+          btn.onpointerup = () => { this.keys[code] = false; };
+        };
+        bindKey('btn-w', 'KeyW');
+        bindKey('btn-a', 'KeyA');
+        bindKey('btn-s', 'KeyS');
+        bindKey('btn-d', 'KeyD');
+        document.getElementById('btn-space').onclick = () => { this.jump(); };
+
+        this.animate();
+      },
+
+      buildCelestialBackdrop() {
+        // Giant Blue Earth visible through observation cupola windows
+        const earthGeo = new THREE.DodecahedronGeometry(36, 2);
+        const earthMat = new THREE.MeshLambertMaterial({ color: 0x1d4ed8, flatShading: true });
+        this.earthGlobe = new THREE.Mesh(earthGeo, earthMat);
+        this.earthGlobe.position.set(90, 80, 160);
+        this.scene.add(this.earthGlobe);
+
+        // 600 Glittering Stars
+        const starGeo = new THREE.BufferGeometry();
+        const starCount = 600;
+        const starPos = new Float32Array(starCount * 3);
+        for (let i = 0; i < starCount * 3; i += 3) {
+          starPos[i] = (Math.random() - 0.5) * 800;
+          starPos[i + 1] = Math.random() * 400 - 40;
+          starPos[i + 2] = (Math.random() - 0.5) * 800;
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 2.0 }));
+        this.scene.add(stars);
+      },
+
+      buildStationModules() {
+        const floorMat = new THREE.MeshLambertMaterial({ color: 0x0f172a, flatShading: true });
+        const wallMat = new THREE.MeshLambertMaterial({ color: 0x1e293b, flatShading: true });
+        const glassMat = new THREE.MeshLambertMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.08, depthWrite: false, side: THREE.DoubleSide, flatShading: true });
+
+        // 1. Central Command Bridge (0, 0, 0)
+        const cmdFloor = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 0.6, 12), floorMat);
+        this.scene.add(cmdFloor);
+
+        // Panoramic Observation Windows (Cupola) looking out at Earth
+        const cupolaRing = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 4.5, 12, 1, true), glassMat);
+        cupolaRing.position.y = 2.3;
+        // Keep the command cupola open in this low-poly view; a full cylinder obscures the scene.
+
+        // Holographic Tactical Planet Table in center of Command
+        const holoTable = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 1.2, 8), new THREE.MeshLambertMaterial({ color: 0x06b6d4, emissive: 0x0891b2 }));
+        holoTable.position.set(0, 0.7, 0);
+        this.scene.add(holoTable);
+
+        // 2. Hydroponics Biome Dome (24, 0, 0)
+        const hydroFloor = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 0.6, 10), floorMat);
+        hydroFloor.position.set(24, 0, 0);
+        this.scene.add(hydroFloor);
+
+        const hydroDome = new THREE.Mesh(new THREE.SphereGeometry(7, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.5), new THREE.MeshLambertMaterial({ color: 0x10b981, transparent: true, opacity: 0.45 }));
+        hydroDome.position.set(24, 0.3, 0);
+        this.scene.add(hydroDome);
+
+        // Tiered Strawberry Planters with glowing fruit
+        for (let i = -1; i <= 1; i++) {
+          const planter = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.8, 2), new THREE.MeshLambertMaterial({ color: 0x059669 }));
+          planter.position.set(24 + i * 3.5, 0.5, i * 2.5);
+          this.scene.add(planter);
+
+          const berry = new THREE.Mesh(new THREE.DodecahedronGeometry(0.35), new THREE.MeshLambertMaterial({ color: 0xef4444, emissive: 0xb91c1c }));
+          berry.position.set(24 + i * 3.5, 1.1, i * 2.5);
+          berry.name = `berry_${i}`;
+          this.scene.add(berry);
+        }
+
+        // Purple Grow Light
+        const purpleLight = new THREE.PointLight(0xa855f7, 2.5, 15);
+        purpleLight.position.set(24, 3.5, 0);
+        this.scene.add(purpleLight);
+
+        // 3. Crew Quarters & ARED Gym (0, 0, 22)
+        const gymFloor = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 6.5, 0.6, 10), floorMat);
+        gymFloor.position.set(0, 0, 22);
+        this.scene.add(gymFloor);
+
+        // ARED Resistive Exercise Machine
+        const ared = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.5, 3.5), new THREE.MeshLambertMaterial({ color: 0x7c3aed, flatShading: true }));
+        ared.position.set(0, 1.4, 23);
+        this.scene.add(ared);
+
+        // 4. ECLSS Life Support & Water Recycling (-22, 0, 0)
+        const eclssFloor = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 0.6, 10), floorMat);
+        eclssFloor.position.set(-22, 0, 0);
+        this.scene.add(eclssFloor);
+
+        const waterTank = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 5, 8), new THREE.MeshLambertMaterial({ color: 0x0284c7, flatShading: true }));
+        waterTank.position.set(-22, 2.6, 0);
+        this.scene.add(waterTank);
+
+        // 5. Engineering Airlock Bay (-40, 0, 0)
+        const airlockFloor = new THREE.Mesh(new THREE.BoxGeometry(10, 0.6, 8), floorMat);
+        airlockFloor.position.set(-40, 0, 0);
+        this.scene.add(airlockFloor);
+
+        const hatch = new THREE.Mesh(new THREE.BoxGeometry(1.2, 4, 3.5), new THREE.MeshLambertMaterial({ color: 0xef4444 }));
+        hatch.position.set(-45, 2, 0);
+        this.scene.add(hatch);
+
+        // Connecting Corridors with Wall Meshes
+        this.buildTunnel(new THREE.Vector3(0, 0, 0), new THREE.Vector3(24, 0, 0));
+        this.buildTunnel(new THREE.Vector3(0, 0, 0), new THREE.Vector3(-22, 0, 0));
+        this.buildTunnel(new THREE.Vector3(-22, 0, 0), new THREE.Vector3(-40, 0, 0));
+        this.buildTunnel(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 22));
+
+        // Exterior Surface & Crater Ice outside (-46 to -100)
+        for (let i = 0; i < 3; i++) {
+          const ice = new THREE.Mesh(new THREE.DodecahedronGeometry(1.8), new THREE.MeshLambertMaterial({ color: 0x38bdf8, emissive: 0x0284c7 }));
+          ice.position.set(-58 - i * 14, 0.8, (i - 1) * 12);
+          this.scene.add(ice);
+        }
+
+        // Scoop Rover parked outside (-60, 0, 10)
+        const rover = new THREE.Mesh(new THREE.BoxGeometry(3.8, 1.5, 4.5), new THREE.MeshLambertMaterial({ color: 0xf8fafc, flatShading: true }));
+        rover.position.set(-62, 0.9, 10);
+        this.scene.add(rover);
+
+        // Mars Starbridge Rocket on launch pad (-85, 0, 0)
+        const rocket = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 3.2, 16, 8), new THREE.MeshLambertMaterial({ color: 0xffffff, flatShading: true }));
+        rocket.position.set(-85, 8.2, 0);
+        this.scene.add(rocket);
+      },
+
+      buildTunnel(from, to) {
+        const mid = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5);
+        const len = from.distanceTo(to);
+        const tube = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, len, 8, 1, true), new THREE.MeshLambertMaterial({ color: 0x1e293b, flatShading: true }));
+        tube.position.copy(mid);
+        tube.position.y = 1.6;
+        tube.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3().subVectors(to, from).normalize());
+        this.scene.add(tube);
+      },
+
+      spawnCadetAstronaut() {
+        this.cadet = new THREE.Group();
+        this.cadet.position.set(0, 1.2, 0);
+
+        // NASA Spacesuit Body
+        const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.8, 0.8), new THREE.MeshLambertMaterial({ color: 0xffffff, flatShading: true }));
+        this.cadet.add(body);
+
+        // Gold Solar Visor
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.5, 0.25), new THREE.MeshLambertMaterial({ color: 0xfbbf24, emissive: 0xb45309 }));
+        visor.position.set(0, 0.45, 0.42);
+        this.cadet.add(visor);
+
+        // PLSS Life Support Backpack
+        const pack = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.2, 0.5), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
+        pack.position.set(0, 0.1, -0.45);
+        this.cadet.add(pack);
+
+        this.scene.add(this.cadet);
+      },
+
+      setupPlanetEnvironment(planet) {
+        if (window.StarbridgeVisuals) {
+          window.StarbridgeVisuals.setupPlanetEnvironment(this, planet);
+          return;
+        }
+
+        if (this.terrainMesh) this.scene.remove(this.terrainMesh);
+        const isMoon = (planet === 'moon');
+        const geo = new THREE.PlaneGeometry(54, 66, 20, 20);
+        geo.rotateX(-Math.PI * 0.5);
+        this.terrainMesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color: isMoon ? 0x1e293b : 0x7c2d12, flatShading: true }));
+        this.terrainMesh.position.set(-73, -0.3, 0);
+        this.scene.add(this.terrainMesh);
+      },
+
+      triggerSolarStormVisual(active) {
+        if (this.solarStormParticles) this.scene.remove(this.solarStormParticles);
+        if (!active) return;
+
+        // Glowing red/gold solar flare proton storm streaks outside windows!
+        const geo = new THREE.BufferGeometry();
+        const count = 150;
+        const pos = new Float32Array(count * 3);
+        for (let i = 0; i < count * 3; i += 3) {
+          pos[i] = (Math.random() - 0.5) * 120;
+          pos[i + 1] = Math.random() * 60 + 5;
+          pos[i + 2] = (Math.random() - 0.5) * 120;
+        }
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        const mat = new THREE.PointsMaterial({ color: 0xef4444, size: 2.8 });
+        this.solarStormParticles = new THREE.Points(geo, mat);
+        this.scene.add(this.solarStormParticles);
+      },
+
+      witherPlants(wither) {
+        for (let i = -1; i <= 1; i++) {
+          const b = this.scene.getObjectByName(`berry_${i}`);
+          if (b) b.material.color.setHex(wither ? 0x78350f : 0xef4444);
+        }
+      },
+
+      jump() {
+        if (this.isGrounded) {
+          const jumpPower = SpaceApp.planet === 'moon' ? 0.28 : 0.22; // 0.166g Moon vs 0.38g Mars
+          this.velocity.y = jumpPower;
+          this.isGrounded = false;
+          sfx.beep(120, 0.2, 'triangle');
+        }
+      },
+
+      // Check whether target (x, z) is inside any valid station room/tunnel or exterior
+      isValidPosition(x, z) {
+        for (let r of this.rooms) {
+          if (x >= r.minX && x <= r.maxX && z >= r.minZ && z <= r.maxZ) {
+            return r.name;
+          }
+        }
+        return null; // Hit wall!
+      },
+
+      animate() {
+        requestAnimationFrame(() => this.animate());
+        if (window.StarbridgeVisuals) window.StarbridgeVisuals.tick(this);
+
+        if (this.earthGlobe) this.earthGlobe.rotation.y += 0.0016;
+        if (this.solarStormParticles) this.solarStormParticles.rotation.y += 0.03;
+
+        // 3D 360-Degree Cadet Locomotion
+        const speed = 0.18;
+        let moveX = 0;
+        let moveZ = 0;
+
+        if (this.keys['KeyW'] || this.keys['ArrowUp']) moveZ -= speed;
+        if (this.keys['KeyS'] || this.keys['ArrowDown']) moveZ += speed;
+        if (this.keys['KeyA'] || this.keys['ArrowLeft']) moveX -= speed;
+        if (this.keys['KeyD'] || this.keys['ArrowRight']) moveX += speed;
+
+        // Physical Wall Collision Check: Only move if inside bounds!
+        if (moveX !== 0 || moveZ !== 0) {
+          const targetX = this.cadet.position.x + moveX;
+          const targetZ = this.cadet.position.z + moveZ;
+
+          const room = this.isValidPosition(targetX, targetZ);
+          if (room) {
+            this.cadet.position.x = targetX;
+            this.cadet.position.z = targetZ;
+            document.getElementById('minimap-current-room').textContent = `ROOM: ${room}`;
+            
+            // Turn cadet in direction of movement
+            this.cadet.rotation.y = Math.atan2(moveX, -moveZ);
+          } else {
+            // Hit wall feedback
+            sfx.beep(200, 0.04, 'sine');
+          }
+        }
+
+        // Gravitational Physics (Moon 0.166g vs Mars 0.38g)
+        if (!this.isGrounded) {
+          this.cadet.position.y += this.velocity.y;
+          const gravity = SpaceApp.planet === 'moon' ? 0.011 : 0.018;
+          this.velocity.y -= gravity;
+          if (this.cadet.position.y <= 1.2) {
+            this.cadet.position.y = 1.2;
+            this.isGrounded = true;
+            this.velocity.y = 0;
+          }
+        }
+
+        // Camera Follow
+        const camTarget = this.cadet.position.clone().add(new THREE.Vector3(0, 6, -14));
+        this.camera.position.lerp(camTarget, 0.1);
+        this.camera.lookAt(this.cadet.position.clone().add(new THREE.Vector3(0, 1.4, 0)));
+
+        // Proximity to mechanisms for [E] prompt
+        const promptEl = document.getElementById('interact-prompt');
+        this.activeInteractAction = null;
+
+        const distToAred = this.cadet.position.distanceTo(new THREE.Vector3(0, 1.2, 23));
+        const distToHydro = this.cadet.position.distanceTo(new THREE.Vector3(24, 1.2, 0));
+        const distToEclss = this.cadet.position.distanceTo(new THREE.Vector3(-22, 1.2, 0));
+        const distToCommand = this.cadet.position.distanceTo(new THREE.Vector3(0, 1.2, 0));
+
+        if (distToAred < 4.5) {
+          promptEl.style.display = 'block';
+          promptEl.textContent = 'PRESS [E] TO DO ARED GYM WORKOUT 🏋️';
+          this.activeInteractAction = () => SpaceApp.completeTask(2);
+        } else if (distToHydro < 5.0) {
+          promptEl.style.display = 'block';
+          promptEl.textContent = 'PRESS [E] TO HARVEST STRAWBERRIES 🍓';
+          this.activeInteractAction = () => SpaceApp.completeTask(3);
+        } else if (distToEclss < 5.0) {
+          promptEl.style.display = 'block';
+          promptEl.textContent = 'PRESS [E] TO CYCLE ECLSS WATER FILTER 💧';
+          this.activeInteractAction = () => SpaceApp.completeTask(4);
+        } else if (distToCommand < 4.0) {
+          promptEl.style.display = 'block';
+          promptEl.textContent = 'PRESS [E] TO TRANSMIT TELEMETRY TO HOUSTON 📡';
+          this.activeInteractAction = () => SpaceApp.completeTask(5);
+        } else {
+          promptEl.style.display = 'none';
+        }
+
+        // Update Minimap Player Dot
+        SpaceApp.renderMinimap();
+
+        this.renderer.render(this.scene, this.camera);
+      }
+    };
+
+    // Auto-Boot Application
+    window.addEventListener('load', () => {
+      Station3D.init();
+      SpaceApp.init();
+    });
+  </script>
+</body>
+</html>

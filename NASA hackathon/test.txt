@@ -1,0 +1,8 @@
+# Project Starbridge - NASA Space Apps Hackathon
+All game files are located in:
+- index.html (Master Web Game)
+- css/ (Styles)
+- js/ (Game Engine, Audio, NASA Data, Mini-Games, Campaign, Certificate)
+- UnityProject/ (Unity 6 C# Source Code)
+- README.md (Quickstart & Rubric)
+- NASA_SCIENCE_GUIDE.md (Young Astronaut's Field Guide)

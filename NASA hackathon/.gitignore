@@ -1,0 +1,33 @@
+# Unity generated
+UnityProject/[Ll]ibrary/
+UnityProject/[Tt]emp/
+UnityProject/[Oo]bj/
+UnityProject/[Bb]uild/
+UnityProject/[Bb]uilds/
+UnityProject/[Ll]ogs/
+UnityProject/[Uu]ser[Ss]ettings/
+UnityProject/[Mm]emoryCaptures/
+UnityProject/[Rr]ecordings/
+
+# Visual Studio / Rider / VSCode
+.vs/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.opendb
+*.VC.db
+
+# OS & Python
+.DS_Store
+Thumbs.db
+__pycache__/
+*.py[cod]
+*.log
