@@ -33,8 +33,8 @@ namespace NASA.ProjectStarbridge
         {
             rb = GetComponent<Rigidbody>();
             rb.mass = 450f; // Rover mass in kg
-            rb.drag = 0.5f;
-            rb.angularDrag = 1.5f;
+            rb.linearDamping = 0.5f;
+            rb.angularDamping = 1.5f;
         }
 
         private void Update()

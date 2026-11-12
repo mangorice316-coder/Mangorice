@@ -1,0 +1,4 @@
+﻿<Solution>
+  <Project Path="ProjectStarbridge.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
+</Solution>

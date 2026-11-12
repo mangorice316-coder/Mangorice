@@ -75,6 +75,9 @@ namespace NASA.ProjectStarbridge
             // 12. Spawn Scoop Rover outside on Lunar Surface
             SpawnScoopRover(new Vector3(-68, -2.5f, 12));
 
+            // A single, deterministic presentation pass adds suit models, deck trim, surface dressing and lighting.
+            StationVisualEnhancements.Apply(this);
+
             Debug.Log("[StationMapGenerator] Massive Station Map generation complete!");
         }
 
@@ -192,7 +195,7 @@ namespace NASA.ProjectStarbridge
             amr.sharedMaterial = LowPolyMaterialFactory.GetLitMaterial(new Color(0.7f, 0.4f, 0.9f), 0.4f);
 
             // Sleep Pods
-            for (int s of new int[] { -6, 6 })
+            foreach (int s in new int[] { -6, 6 })
             {
                 GameObject pod = new GameObject("Crew_Sleep_Pod_" + s);
                 pod.transform.SetParent(gym.transform);
@@ -419,3 +422,4 @@ namespace NASA.ProjectStarbridge
         }
     }
 }
+

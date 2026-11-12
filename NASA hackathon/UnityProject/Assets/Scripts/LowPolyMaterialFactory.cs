@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace NASA.ProjectStarbridge
 {
@@ -14,8 +15,7 @@ namespace NASA.ProjectStarbridge
 
         public static Material GetLitMaterial(Color baseColor, float smoothness = 0.2f)
         {
-            Shader s = Shader.Find("Universal Render Pipeline/Lit");
-            if (s == null) s = Shader.Find("Standard");
+            Shader s = GraphicsSettings.currentRenderPipeline == null ? Shader.Find("Standard") : Shader.Find("Universal Render Pipeline/Lit");
             if (s == null) s = Shader.Find("Diffuse");
 
             Material mat = new Material(s);
@@ -29,8 +29,7 @@ namespace NASA.ProjectStarbridge
 
         public static Material GetTranslucentMaterial(Color tint)
         {
-            Shader s = Shader.Find("Universal Render Pipeline/Lit");
-            if (s == null) s = Shader.Find("Standard");
+            Shader s = GraphicsSettings.currentRenderPipeline == null ? Shader.Find("Standard") : Shader.Find("Universal Render Pipeline/Lit");
 
             Material mat = new Material(s);
             mat.name = "LowPoly_Translucent";
@@ -64,4 +63,7 @@ namespace NASA.ProjectStarbridge
         }
     }
 }
+
+
+
 

@@ -64,10 +64,10 @@ namespace NASA.ProjectStarbridge
                 TextureHandle activeColor = resourceData.activeColorTexture;
 
                 // Create destination texture descriptor matching the active camera target
-                RenderTextureDescriptor desc = renderGraph.GetTextureDesc(activeColor);
+                TextureDesc desc = renderGraph.GetTextureDesc(activeColor);
                 desc.name = "_SpaceRadiationTexture";
                 desc.clearBuffer = false;
-                desc.depthBufferBits = 0;
+                desc.depthBufferBits = DepthBits.None;
 
                 TextureHandle destination = renderGraph.CreateTexture(desc);
 
@@ -110,4 +110,5 @@ namespace NASA.ProjectStarbridge
         }
     }
 }
+
 
