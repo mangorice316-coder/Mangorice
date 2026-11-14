@@ -76,7 +76,16 @@ const NovaAI = (() => {
     return list[Math.floor(Math.random() * list.length)];
   }
 
-  function getAnswer(query) {
+  async function getAnswer(query) {
+    if (window.NASA_API && window.NASA_API.askAI) {
+      try {
+        const aiRes = await window.NASA_API.askAI(query);
+        if (aiRes && aiRes.live && aiRes.answer) {
+          return `${aiRes.answer} <span style="display:block;margin-top:6px;font-size:10px;color:var(--cyan);font-family:var(--font-mono);">🤖 [NOVA AI · ${aiRes.model}]</span>`;
+        }
+      } catch (e) {}
+    }
+
     const qLower = query.toLowerCase();
     for (const item of KNOWLEDGE_BASE.general) {
       if (item.q.toLowerCase().includes(qLower) || qLower.includes(item.q.toLowerCase().split(' ')[1])) {
@@ -133,8 +142,10 @@ const NovaAI = (() => {
         } else if (action === 'quiz') {
           startQuiz(body);
         } else if (q) {
-          const ans = getAnswer(q);
-          body.innerHTML = `<p style="color:var(--cyan);margin-bottom:6px;"><strong>Q: ${q}</strong></p><p>${ans}</p>`;
+          body.innerHTML = `<p style="color:var(--cyan);margin-bottom:6px;"><strong>Q: ${q}</strong></p><p style="color:var(--muted);">Analyzing deep space telemetry...</p>`;
+          getAnswer(q).then(ans => {
+            body.innerHTML = `<p style="color:var(--cyan);margin-bottom:6px;"><strong>Q: ${q}</strong></p><p>${ans}</p>`;
+          });
         }
       };
     });

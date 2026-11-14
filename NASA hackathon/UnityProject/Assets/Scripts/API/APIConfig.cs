@@ -4,60 +4,71 @@ using UnityEngine;
 namespace NASA.ProjectStarbridge.API
 {
     /// <summary>
-    /// Central API Configuration for Unity C# Subsystems.
-    /// Configure your NASA Open API key here or in NASADataService.
+    /// Central 5-Tier API Configuration for Unity C# Subsystems.
+    /// Manages the 5 mission-critical keys for NASA data, AI, Satellite tracking, and Weather.
     /// </summary>
     public static class APIConfig
     {
         // ====================================================================
-        // 👉 PASTE YOUR NASA API KEY HERE (Replace "DEMO_KEY"):
+        // 🔑 THE 5 MISSION API KEYS:
         // ====================================================================
-        public static string NASA_API_KEY = "DEMO_KEY";
+        
+        // 1. Primary NASA Open API Key
+        public static string NASA_PRIMARY_KEY = "DEMO_KEY";
 
+        // 2. AI Intelligence Engine (Gemini / OpenAI for NOVA Assistant)
+        public static string AI_ASSISTANT_KEY = "";
+
+        // 3. Secondary NASA Key / Failover Pool
+        public static string NASA_SECONDARY_KEY = "";
+
+        // 4. Satellite & Orbit Tracker (N2YO / Space-Track)
+        public static string SATELLITE_TRACKER_KEY = "";
+
+        // 5. Spaceport & Launch Weather (OpenWeatherMap)
+        public static string SPACEPORT_WEATHER_KEY = "";
+
+        // Endpoints
         public const string NASA_BASE_URL = "https://api.nasa.gov";
         public const string DONKI_NOTIFICATIONS_URL = "https://api.nasa.gov/DONKI/notifications";
         public const string DONKI_CME_URL = "https://api.nasa.gov/DONKI/CME";
         public const string DONKI_FLR_URL = "https://api.nasa.gov/DONKI/FLR";
         public const string APOD_URL = "https://api.nasa.gov/planetary/apod";
-
-        private const string PREFS_KEY = "NASA_API_KEY_PREF";
+        public const string ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
 
         /// <summary>
-        /// Retrieves the active NASA API key (checks PlayerPrefs, then fallback)
+        /// Retrieves the active NASA API key
         /// </summary>
         public static string GetActiveKey()
         {
-            if (PlayerPrefs.HasKey(PREFS_KEY))
+            if (PlayerPrefs.HasKey("KEY_NASA_PRIMARY"))
             {
-                string stored = PlayerPrefs.GetString(PREFS_KEY);
+                string stored = PlayerPrefs.GetString("KEY_NASA_PRIMARY");
                 if (!string.IsNullOrEmpty(stored) && stored != "DEMO_KEY")
                 {
                     return stored;
                 }
             }
-            return string.IsNullOrEmpty(NASA_API_KEY) ? "DEMO_KEY" : NASA_API_KEY;
+            return string.IsNullOrEmpty(NASA_PRIMARY_KEY) ? "DEMO_KEY" : NASA_PRIMARY_KEY;
         }
 
-        /// <summary>
-        /// Saves a new API key to PlayerPrefs
-        /// </summary>
-        public static void SetActiveKey(string key)
+        public static string GetAIKey()
         {
-            string sanitized = (key ?? "").Trim();
-            if (!string.IsNullOrEmpty(sanitized) && sanitized != "DEMO_KEY")
-            {
-                PlayerPrefs.SetString(PREFS_KEY, sanitized);
-                PlayerPrefs.Save();
-            }
-            else
-            {
-                PlayerPrefs.DeleteKey(PREFS_KEY);
-                PlayerPrefs.Save();
-            }
+            return PlayerPrefs.GetString("KEY_AI_ASSISTANT", AI_ASSISTANT_KEY);
+        }
+
+        public static string GetSatelliteKey()
+        {
+            return PlayerPrefs.GetString("KEY_SATELLITE", SATELLITE_TRACKER_KEY);
+        }
+
+        public static string GetWeatherKey()
+        {
+            return PlayerPrefs.GetString("KEY_WEATHER", SPACEPORT_WEATHER_KEY);
         }
 
         /// <summary>
-        /// Formats full URL with active key
+        /// Formats full NASA URL with active key
         /// </summary>
         public static string BuildUrl(string endpoint, string queryParams = "")
         {

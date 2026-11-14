@@ -1,88 +1,65 @@
-# 🚀 NASA Junior Astronaut Mission Trainer — API Connection Guide
+# 🛰️ NASA Junior Astronaut Mission Trainer — 5-Key API Integration Guide
 
-Welcome to the **API Configuration Subsystem** for the **NASA Junior Astronaut Mission Trainer**!
+Welcome to the **5-Key Deep Space Telemetry Architecture** for the **NASA Junior Astronaut Mission Trainer**.
 
-This folder provides everything you need to connect your **official NASA Open API key** to power live space weather telemetry, satellite feeds, Mars rover cameras, and deep space exploration.
-
----
-
-## 🔑 1. How to Get a Free NASA API Key (30 Seconds)
-
-1. Open your browser and go to: **[https://api.nasa.gov/](https://api.nasa.gov/)**
-2. Fill in:
-   - **First Name**
-   - **Last Name**
-   - **Email Address**
-3. Click **"Signup"**.
-4. Your personal NASA API key will appear instantly on screen (and sent to your email).
-   - Format example: `u8YtK8m92kLm9qV41P93nZbC081XaQ98yZ12345`
+This framework integrates **5 mission-critical API services** to provide cadets and judges with a full-scale astronaut simulation combining NASA live space data, AI mentor intelligence, satellite orbital tracking, and spaceport weather.
 
 ---
 
-## 🛠️ 2. Where to Put Your API Key
+## 🔑 The 5 Mission API Keys
 
-You have **two easy ways** to connect your key:
-
-### Method A: Directly in Code (Recommended for Developers)
-1. Open [`api/config.js`](file:///c:/Users/tamil/OneDrive/문서/GitHub/Mangorice/NASA%20hackathon/api/config.js) in your editor.
-2. Find line 33:
-   ```javascript
-   NASA_API_KEY: "DEMO_KEY",
-   ```
-3. Replace `"DEMO_KEY"` with your key:
-   ```javascript
-   NASA_API_KEY: "YOUR_ACTUAL_KEY_HERE",
-   ```
-4. Save the file! The game will immediately recognize and use your personal key.
+| Slot # | Key Name | Service & Provider | What It Powers In-Game | Signup Link |
+| :--- | :--- | :--- | :--- | :--- |
+| **Key 1** | `NASA_PRIMARY_KEY` | **NASA Open Data** | DONKI Solar Flares, Coronal Mass Ejections (CME), Mars Perseverance & Curiosity photos, APOD, Asteroids (NeoWs). | [api.nasa.gov](https://api.nasa.gov/) |
+| **Key 2** | `AI_ASSISTANT_KEY` | **Google Gemini / OpenAI** | **NOVA AI Assistant**: Dynamic voice/chat astronaut mentoring, live science Q&A, and adaptive mission debriefs. | [aistudio.google.com](https://aistudio.google.com/) |
+| **Key 3** | `NASA_SECONDARY_KEY` | **NASA Failover Pool** | Automatic rate-limit failover and team key load-balancing (boosts capacity to 2,000+ req/hr). | [api.nasa.gov](https://api.nasa.gov/) |
+| **Key 4** | `SATELLITE_TRACKER_KEY`| **N2YO / Space-Track** | Real-time orbital passes for the International Space Station (ISS), Artemis Gateway, and Hubble. | [n2yo.com/api](https://www.n2yo.com/api/) |
+| **Key 5** | `SPACEPORT_WEATHER_KEY`| **OpenWeatherMap** | Live launch telemetry from Kennedy Space Center (Pad 39B, Florida) & Mars environmental monitoring. | [openweathermap.org](https://openweathermap.org/api) |
 
 ---
 
-### Method B: Right Inside the Running Game (Interactive)
+## 🛠️ Two Ways to Configure Your 5 Keys
+
+### Method A: Directly in Code (`api/config.js`)
+Open [**`api/config.js`**](file:///c:/Users/tamil/OneDrive/문서/GitHub/Mangorice/NASA%20hackathon/api/config.js) and populate the `KEYS` object:
+
+```javascript
+KEYS: {
+  // 1. Primary NASA Open API Key
+  NASA_PRIMARY_KEY: "YOUR_NASA_KEY_HERE",
+
+  // 2. AI Intelligence (Google Gemini "AIza..." or OpenAI "sk-...")
+  AI_ASSISTANT_KEY: "YOUR_GEMINI_OR_OPENAI_KEY_HERE",
+
+  // 3. Secondary NASA Key / Failover Pool
+  NASA_SECONDARY_KEY: "YOUR_SECOND_NASA_KEY_HERE",
+
+  // 4. Satellite & Orbit Tracker (N2YO)
+  SATELLITE_TRACKER_KEY: "YOUR_N2YO_KEY_HERE",
+
+  // 5. Spaceport Launch Weather (OpenWeatherMap)
+  SPACEPORT_WEATHER_KEY: "YOUR_OPENWEATHER_KEY_HERE"
+}
+```
+
+### Method B: In-Game Interactive 5-Key Command Center
 1. Launch the game in your browser (`http://localhost:8000` or double-click `play.bat`).
-2. In the top navigation bar, click the **`🔑 NASA API Key`** button.
-3. Paste your API key into the input field.
-4. Click **"⚡ Connect"**.
-5. The game will test your key against NASA's live servers in real-time, show your ping and rate limits, and save it to your browser's secure local storage.
+2. In the top navigation bar, click the **`🔑 APIs · X/5 ACTIVE`** button.
+3. You will see all 5 key slots with:
+   - Dedicated password-masked input fields (with `👁️` peek button).
+   - Direct links to free signup pages.
+   - Individual **`💾 Save`** and **`⚡ Test`** buttons.
+   - A **`⚡ Test All 5 Keys`** master diagnostic button that pings all services in parallel and displays latency, status, and remaining quota.
 
 ---
 
-## 🛰️ 3. What NASA Services Connect With Your Key?
-
-| Service | Endpoint | In-Game Feature |
-| :--- | :--- | :--- |
-| **NASA DONKI CME** | `/DONKI/CME` | Real-time Coronal Mass Ejection plasma speed tracking and solar radiation alerts. |
-| **NASA DONKI Solar Flares** | `/DONKI/FLR` | Live X-class, M-class, and C-class flare detection from SDO & GOES satellites. |
-| **NASA DONKI Notifications**| `/DONKI/notifications` | Live flight-rule warnings streaming from the Space Weather Prediction Center. |
-| **NASA APOD** | `/planetary/apod` | High-resolution deep space imagery from Hubble & James Webb Space Telescope. |
-| **Mars Perseverance Rover** | `/mars-photos/.../perseverance` | Raw photo telemetry from Jezero Crater on Mars. |
-| **Mars Curiosity Rover** | `/mars-photos/.../curiosity` | Raw mastcam and navigation camera shots from Gale Crater. |
-| **Asteroids (NeoWs)** | `/neo/rest/v1/feed` | Real-time tracking of near-Earth asteroids and close approaches. |
+## 🛡️ Key Rotation & Offline Resilience
+- **Team Load-Balancing Pool**: If you have multiple NASA keys for your team, add them to `NASA_KEY_POOL` in `api/config.js`. If one key hits NASA's rate limit (HTTP 429), the engine automatically rotates to the next key without interrupting gameplay.
+- **100% Offline Mode**: If any key is missing or internet connectivity is unavailable, the simulation automatically uses high-fidelity cached datasets (May 2024 Solar Superstorm, Apollo 17 & Perseverance panoramas, nominal ISS orbit baseline, and Kennedy Space Center telemetry).
 
 ---
 
-## ⚡ Rate Limits: DEMO_KEY vs. Personal Key
-
-| Key Type | Hourly Request Limit | Daily Request Limit | Best For |
-| :--- | :--- | :--- | :--- |
-| **`DEMO_KEY`** (Default) | 30 requests / hour | 50 requests / day | Quick testing & offline use |
-| **`Personal NASA Key`** | **1,000 requests / hour** | **Unlimited** | Seamless gameplay, live streams & competition judging |
-
-> **Offline Protection**: If your computer loses internet access or hits a rate limit, the Mission Trainer automatically falls back to the bundled **May 2024 Solar Superstorm verified telemetry dataset** (`assets/donki_dataset.json`), ensuring zero crashes or interruptions!
-
----
-
-## 🎮 4. Unity 3D Engine Integration
-
-If you are running the game in **Unity 3D**:
-1. Open the Unity project.
-2. The C# client is located at:
-   - [`UnityProject/Assets/Scripts/API/APIConfig.cs`](file:///c:/Users/tamil/OneDrive/문서/GitHub/Mangorice/NASA%20hackathon/UnityProject/Assets/Scripts/API/APIConfig.cs)
-   - [`UnityProject/Assets/Scripts/NASADataService.cs`](file:///c:/Users/tamil/OneDrive/문서/GitHub/Mangorice/NASA%20hackathon/UnityProject/Assets/Scripts/NASADataService.cs)
-3. Set your key in `APIConfig.cs` or in the `NASADataService` inspector component in the scene hierarchy.
-
----
-
-## 🔒 5. Privacy & Security
-- Your API key is stored strictly on your local computer (`api/config.js` and browser `localStorage`).
-- It is only transmitted directly to official **`https://api.nasa.gov/`** SSL-encrypted endpoints.
-- No third-party servers ever receive or store your key.
+## 🎮 Unity 3D Engine Support
+If you open the project in Unity, all 5 keys are also exposed in C#:
+- [**`UnityProject/Assets/Scripts/API/APIConfig.cs`**](file:///c:/Users/tamil/OneDrive/문서/GitHub/Mangorice/NASA%20hackathon/UnityProject/Assets/Scripts/API/APIConfig.cs)
+- Access keys in any C# script via `APIConfig.GetNASAKey()`, `APIConfig.GetAIKey()`, `APIConfig.GetSatelliteKey()`, etc.
