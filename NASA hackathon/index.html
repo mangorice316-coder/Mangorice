@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#080e19">
-  <title>ASTRA — Junior Astronaut Mission Trainer | NASA Space Apps 2026</title>
+  <title>NASA JUNIOR ASTRONAUT MISSION TRAINER | 3D Space Simulator</title>
   
   <!-- NASA & Modern Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -788,8 +788,152 @@
     }
 
   </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+  <!-- 01. Cinematic Opening Sequence (Section 3) -->
+  <section id="cinematicScreen">
+    <div class="cinematicContent">
+      <div class="cinematicLogo">
+        <div class="nasaInsignia">NASA</div>
+        <div>
+          <h1 class="cinematicTitle">NASA JUNIOR ASTRONAUT</h1>
+          <div class="cinematicSubtitle">MISSION TRAINER</div>
+        </div>
+      </div>
+      <p style="font-family:var(--font-mono);font-size:13px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;">
+        "Your Universe. Your Mission. Your Discovery."
+      </p>
+
+      <div class="commBox">
+        <div class="commHeader">
+          <span class="liveBeacon"></span>
+          <span>HOUSTON FLIGHT DYNAMICS · INCOMING TRANSMISSION</span>
+        </div>
+        <p class="commText">
+          "Welcome to the NASA Junior Astronaut Training Program, Cadet! Humanity's future in the stars begins with your training today. You have been selected to explore real space station modules, operate planetary rovers, conduct physics experiments, and command deep-space missions. Report to the Command Center to begin your recruitment!"
+        </p>
+      </div>
+
+      <div style="display:flex;gap:14px;justify-content:center;margin-top:20px;">
+        <button class="btn accent" id="startJourneyBtn" style="padding:14px 28px;font-size:15px;">
+          🚀 START YOUR JOURNEY
+        </button>
+        <button class="btn" id="skipIntroBtn">Skip Intro</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02. Full-Screen 8-Hub Views -->
+  <div class="hubView" id="academyHubView"></div>
+  <div class="hubView" id="missionsHubView"></div>
+  <div class="hubView" id="planetariumHubView"></div>
+  <div class="hubView" id="laboratoryHubView"></div>
+  <div class="hubView" id="simulatorHubView"></div>
+  <div class="hubView" id="achievementsHubView"></div>
+
+  <!-- 03. Interactive Activity Modal -->
+  <div id="interactiveModal">
+    <div class="modalContent glass-panel" id="interactiveModalContent"></div>
+  </div>
+
+  <!-- 04. Astronaut Profile & Customizer Modal (Section 4) -->
+  <div id="profileModal">
+    <div class="profileCardWrapper glass-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div>
+          <div class="eyebrow">ASTRONAUT RECRUITMENT & CUSTOMIZER</div>
+          <h2 style="font-family:var(--font-display);">Cadet Flight Profile</h2>
+        </div>
+        <button class="iconBtn" id="profileCloseBtn">✕</button>
+      </div>
+
+      <div class="profileLayout">
+        <!-- Left: Customization Controls -->
+        <div>
+          <label style="font-size:11px;font-family:var(--font-mono);color:var(--cyan);display:block;margin-bottom:4px;">ASTRONAUT CALLSIGN / NAME</label>
+          <input type="text" id="inputAstronautName" value="Cadet Leo" class="btn" style="width:100%;text-align:left;background:rgba(255,255,255,0.06);margin-bottom:14px;">
+
+          <label style="font-size:11px;font-family:var(--font-mono);color:var(--cyan);display:block;margin-bottom:4px;">SELECT AVATAR</label>
+          <div class="avatarGrid" id="profileAvatarGrid"></div>
+
+          <label style="font-size:11px;font-family:var(--font-mono);color:var(--cyan);display:block;margin-top:14px;margin-bottom:4px;">SUIT COLOR SCHEME</label>
+          <div class="colorPickerRow" id="profileColorRow"></div>
+
+          <label style="font-size:11px;font-family:var(--font-mono);color:var(--cyan);display:block;margin-top:14px;margin-bottom:4px;">SPECIALIZATION ROLE</label>
+          <select id="profileRoleSelect" class="btn" style="width:100%;background:rgba(11,21,48,0.9);margin-top:4px;"></select>
+        </div>
+
+        <!-- Right: Holographic ID Card -->
+        <div>
+          <div class="holoBadge">
+            <div class="badgeTop">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="nasaInsignia" style="width:28px;height:28px;font-size:12px;">NASA</span>
+                <div>
+                  <strong style="font-size:12px;font-family:var(--font-display);display:block;">JUNIOR ASTRONAUT PROGRAM</strong>
+                  <small style="font-size:8px;font-family:var(--font-mono);color:var(--cyan);">OFFICIAL FLIGHT CREDENTIAL</small>
+                </div>
+              </div>
+              <span style="font-family:var(--font-mono);font-size:9px;color:var(--green);">● ACTIVE</span>
+            </div>
+
+            <div style="display:flex;align-items:center;margin:12px 0;">
+              <div class="badgePhoto" id="badgeAvatar">👨‍🚀</div>
+              <div>
+                <h3 id="badgeName" style="font-family:var(--font-display);font-size:20px;color:var(--white);">Cadet Leo</h3>
+                <div id="badgeRole" style="font-size:11px;color:var(--cyan);font-family:var(--font-mono);">Space Explorer</div>
+                <div id="badgeId" style="font-size:9px;color:var(--silver);font-family:var(--font-mono);">NASA-JAT-2026-X84</div>
+              </div>
+            </div>
+
+            <div class="badgeStats">
+              <div class="statItem">
+                <span>RANK</span>
+                <strong id="badgeRank">🚀 Cadet Astronaut</strong>
+              </div>
+              <div class="statItem">
+                <span>EXP POINTS</span>
+                <strong id="badgeXp">0 XP</strong>
+              </div>
+              <div class="statItem">
+                <span>MISSIONS</span>
+                <strong id="badgeMissions">0</strong>
+              </div>
+              <div class="statItem">
+                <span>NEXT RANK</span>
+                <strong id="badgeNextXp">250 XP</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btnRow" style="display:flex;justify-content:flex-end;gap:12px;margin-top:16px;">
+        <button class="btn primary" id="saveProfileBtn">Save Profile & Suit →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05. Rank-Up Celebratory Modal -->
+  <div class="modal" id="rankUpModal" role="dialog" aria-modal="true" style="z-index:60;">
+    <div class="card glass-panel" style="max-width:440px;text-align:center;">
+      <div id="rankUpBadge" style="font-size:54px;margin-bottom:10px;">⭐</div>
+      <div class="eyebrow" style="color:var(--amber);">PROMOTION CEREMONY</div>
+      <h2 id="rankUpTitle" style="font-family:var(--font-display);font-size:26px;margin:6px 0;">Junior Explorer</h2>
+      <p id="rankUpDesc" class="muted small" style="margin-bottom:20px;">Certified for Low Earth Orbit and Station Operations!</p>
+      <button class="btn primary wide" onclick="document.getElementById('rankUpModal').classList.remove('on');SoundEngine.click();">Accept Promotion & Continue →</button>
+    </div>
+  </div>
+
+  <!-- 06. Floating AI Assistant NOVA (Section 10) -->
+  <div id="novaFab" title="Ask NOVA (N)" aria-label="AI Mission Assistant NOVA">✨</div>
+  <div id="novaChat" class="glass-panel" role="dialog" aria-label="NOVA AI Assistant"></div>
+
+  <!-- 07. Floating 8-Hub Navigation Dock (Section 5) -->
+  <nav id="hubDock" class="glass-panel" aria-label="Command Center Navigation"></nav>
+
   <!-- Three.js WebGL Outpost Canvas -->
   <canvas id="scene" aria-label="Interactive 3D junior astronaut training outpost"></canvas>
   <div id="vignette"></div>
@@ -800,10 +944,13 @@
 
   <div id="hud">
     <header class="topbar panel">
-      <div class="brand">
-        <span class="logoMark">Λ</span>
-        <div><strong>ASTRA</strong><small>JUNIOR ASTRONAUT PROGRAM</small></div>
+            <div class="brand">
+        <span class="nasaInsignia" style="width:36px;height:36px;font-size:14px;cursor:pointer;" onclick="AppRouter.navigate('command')" title="Command Center">NASA</span>
+        <div><strong style="letter-spacing:2px;">NASA JUNIOR ASTRONAUT</strong><small style="letter-spacing:1px;color:var(--cyan)">MISSION TRAINER</small></div>
       </div>
+      <button class="hudPill" id="hudProfilePill" onclick="AppRouter.navigate('profile')" title="Open Astronaut Profile (8)" style="border-color:rgba(66,232,255,0.4);">
+        <span id="hudRankDisplay">🚀 Cadet Astronaut</span> | <span id="hudAstronautName" style="color:var(--cyan);font-weight:700;">Cadet Leo</span> (<span id="hudXpDisplay" style="color:var(--amber);">0 XP</span>)
+      </button>
       
       <div class="topStatus">
         <span><span class="liveDot"></span><b id="locationLabel">LUNAR OUTPOST</b></span>
@@ -914,10 +1061,13 @@
   <!-- Landing / Destination Menu Screen -->
   <section class="screen on" id="menu">
     <div class="menuHeader">
-      <div class="brand">
-        <span class="logoMark">Λ</span>
-        <div><strong>ASTRA</strong><small>JUNIOR ASTRONAUT PROGRAM</small></div>
+            <div class="brand">
+        <span class="nasaInsignia" style="width:36px;height:36px;font-size:14px;cursor:pointer;" onclick="AppRouter.navigate('command')" title="Command Center">NASA</span>
+        <div><strong style="letter-spacing:2px;">NASA JUNIOR ASTRONAUT</strong><small style="letter-spacing:1px;color:var(--cyan)">MISSION TRAINER</small></div>
       </div>
+      <button class="hudPill" id="hudProfilePill" onclick="AppRouter.navigate('profile')" title="Open Astronaut Profile (8)" style="border-color:rgba(66,232,255,0.4);">
+        <span id="hudRankDisplay">🚀 Cadet Astronaut</span> | <span id="hudAstronautName" style="color:var(--cyan);font-weight:700;">Cadet Leo</span> (<span id="hudXpDisplay" style="color:var(--amber);">0 XP</span>)
+      </button>
       <div class="edition">NASA SPACE APPS 2026 EDITION</div>
     </div>
 
@@ -3613,5 +3763,25 @@
     frame();
   })();
   </script>
+  <!-- Modular NASA Junior Astronaut Systems -->
+  <script src="js/audio.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/nova.js"></script>
+  <script src="js/academy.js"></script>
+  <script src="js/missions.js"></script>
+  <script src="js/planetarium.js"></script>
+  <script src="js/laboratory.js"></script>
+  <script src="js/simulator.js"></script>
+  <script src="js/achievements.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Initialize Master App Router
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof AppRouter !== 'undefined') {
+        AppRouter.init();
+      }
+    });
+  </script>
+
 </body>
 </html>
