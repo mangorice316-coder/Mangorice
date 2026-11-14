@@ -1240,6 +1240,10 @@
           <strong style="color:var(--cyan)">📡 Live NASA API Sync</strong>
           <small>Queries api.nasa.gov/DONKI for latest real-time solar events. Seamlessly handles offline cache.</small>
         </button>
+        <button class="scenarioBtn" id="btnOpenApiKeyModalFromDonki" style="border-color:rgba(120,222,235,0.4); background:rgba(120,222,235,0.08);">
+          <strong style="color:var(--green)">🔑 Manage NASA API Key & Credentials</strong>
+          <small>Connect your personal key from api/config.js or paste here (1,000 requests/hour).</small>
+        </button>
       </div>
 
       <!-- Science Comparison Card -->
@@ -1598,41 +1602,52 @@
       },
 
       async fetchLiveAPI() {
-        toast('Syncing NASA DONKI Space Weather Feed...');
+        const hasCustom = window.NASA_API && window.NASA_API.hasCustomKey();
+        toast(hasCustom ? 'Syncing Live NASA DONKI via Personal Key...' : 'Syncing NASA DONKI Space Weather Feed (DEMO_KEY)...');
         try {
-          // Fetch latest CME from NASA DONKI
-          const res = await fetch('https://api.nasa.gov/DONKI/CME?startDate=2024-05-08&endDate=2024-05-12&api_key=DEMO_KEY');
-          if (res.ok) {
-            const data = await res.json();
-            if (data && data.length > 0) {
-              const latest = data[data.length - 1];
-              const speed = latest.cmeAnalyses?.[0]?.speed || 1100;
-              this.datasets.live = {
-                id: 'live',
-                name: `NASA Live Fleet Observation (${latest.activityID.slice(0, 10)})`,
-                flare: 'X-Class SDO',
-                cmeSpeed: `${speed} km/s`,
-                cmeType: latest.cmeAnalyses?.[0]?.type || 'Halo CME',
-                sep: '> 50 MeV High Proton Flux',
-                kp: 'Kp 8.3 (G4 Severe)',
-                wind: '670 km/s',
-                region: latest.activeRegionNum ? `AR ${latest.activeRegionNum}` : 'SDO AIA Target',
-                alertLevel: speed > 900 ? 'RED' : 'AMBER',
-                statusText: `CME ${speed}km/s · LIVE SDO`,
-                stormFactor: speed > 900 ? 0.9 : 0.4,
-                solarMult: 1.25,
-                subtitles: {
-                  flare: 'SDO / SOHO Live Fleet Stream',
-                  cme: `Speed: ${speed} km/s (api.nasa.gov)`,
-                  sep: 'Energetic Particle Detection L1',
-                  kp: 'Geomagnetic Disturbance Alert'
-                }
-              };
-              this.setScenario('live');
-              if ($('#btnScenLiveApi')) $('#btnScenLiveApi').classList.add('selected');
-              toast('NASA DONKI: Live Fleet Telemetry Synchronized!');
-              return;
+          let events = null;
+          if (window.NASA_API) {
+            const res = await window.NASA_API.getDONKI_CME();
+            if (res && res.success && res.events && res.events.length > 0) {
+              events = res.events;
             }
+          }
+          
+          if (!events) {
+            // Direct fetch fallback
+            const key = (window.NASA_API ? window.NASA_API.getKey() : 'DEMO_KEY');
+            const res = await fetch(`https://api.nasa.gov/DONKI/CME?startDate=2024-05-08&endDate=2024-05-12&api_key=${encodeURIComponent(key)}`);
+            if (res.ok) events = await res.json();
+          }
+
+          if (events && events.length > 0) {
+            const latest = events[events.length - 1];
+            const speed = latest.cmeAnalyses?.[0]?.speed || 1100;
+            this.datasets.live = {
+              id: 'live',
+              name: `NASA Live Fleet Observation (${latest.activityID.slice(0, 10)})`,
+              flare: 'X-Class SDO Flare',
+              cmeSpeed: `${speed} km/s`,
+              cmeType: latest.cmeAnalyses?.[0]?.type || 'Halo CME',
+              sep: '> 50 MeV High Proton Flux',
+              kp: 'Kp 8.3 (G4 Severe)',
+              wind: '670 km/s',
+              region: latest.activeRegionNum ? `AR ${latest.activeRegionNum}` : 'SDO Active Region',
+              alertLevel: speed > 900 ? 'RED' : 'AMBER',
+              statusText: `CME ${speed}km/s · LIVE SDO`,
+              stormFactor: speed > 900 ? 0.9 : 0.4,
+              solarMult: 1.25,
+              subtitles: {
+                flare: 'SDO / SOHO Live Fleet Stream',
+                cme: `Speed: ${speed} km/s (api.nasa.gov)`,
+                sep: 'Energetic Particle Detection L1',
+                kp: 'Geomagnetic Disturbance Alert'
+              }
+            };
+            this.setScenario('live');
+            if ($('#btnScenLiveApi')) $('#btnScenLiveApi').classList.add('selected');
+            toast(`NASA DONKI: Synchronized! (${hasCustom ? 'Personal API Key' : 'DEMO_KEY'})`);
+            return;
           }
         } catch (e) {
           console.warn('DONKI live fetch using verified cached dataset:', e);
@@ -3134,6 +3149,12 @@
     if ($('#btnScenActiveFlare')) $('#btnScenActiveFlare').onclick = () => { NASA_DONKI.setScenario('active'); Audio.click(); };
     if ($('#btnScenQuietSun')) $('#btnScenQuietSun').onclick = () => { NASA_DONKI.setScenario('quiet'); Audio.click(); };
     if ($('#btnScenLiveApi')) $('#btnScenLiveApi').onclick = () => { NASA_DONKI.fetchLiveAPI(); Audio.click(); };
+    if ($('#btnOpenApiKeyModalFromDonki')) $('#btnOpenApiKeyModalFromDonki').onclick = () => {
+      closeDonkiModal();
+      const m = $('#apiKeyModal');
+      if (m) m.classList.add('on');
+      Audio.click();
+    };
 
     // Auto-start video on first interaction
     window.addEventListener('click', () => {
@@ -3763,6 +3784,11 @@
     frame();
   })();
   </script>
+  <!-- NASA Open API Subsystems & Key Configuration -->
+  <script src="api/config.js"></script>
+  <script src="api/nasa.js"></script>
+  <script src="api/api-manager.js"></script>
+
   <!-- Modular NASA Junior Astronaut Systems -->
   <script src="js/audio.js"></script>
   <script src="js/profile.js"></script>

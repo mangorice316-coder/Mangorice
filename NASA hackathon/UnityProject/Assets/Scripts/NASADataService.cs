@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
+using NASA.ProjectStarbridge.API;
 
 namespace NASA.ProjectStarbridge
 {
@@ -16,13 +17,15 @@ namespace NASA.ProjectStarbridge
 
     /// <summary>
     /// Connects to NASA DONKI (Space Weather Database Of Notifications, Knowledge, and Information) API.
-    /// Provides real space weather data or authentic simulation offline.
+    /// Provides real space weather data using the API key configured in APIConfig or authentic simulation offline.
     /// </summary>
     public class NASADataService : MonoBehaviour
     {
         public static NASADataService Instance { get; private set; }
 
-        private const string DONKI_URL = "https://api.nasa.gov/DONKI/notifications?type=all&api_key=DEMO_KEY";
+        [Header("API Override (Optional)")]
+        [Tooltip("Leave blank to use APIConfig.NASA_API_KEY")]
+        public string customApiKey = "";
 
         public event Action<string, string> OnSpaceWeatherAlertReceived;
 
@@ -30,6 +33,11 @@ namespace NASA.ProjectStarbridge
         {
             if (Instance == null) Instance = this;
             else Destroy(gameObject);
+
+            if (!string.IsNullOrEmpty(customApiKey))
+            {
+                APIConfig.SetActiveKey(customApiKey);
+            }
         }
 
         public void FetchSpaceWeatherAlert()
@@ -39,9 +47,11 @@ namespace NASA.ProjectStarbridge
 
         private IEnumerator FetchDONKICoroutine()
         {
-            using (UnityWebRequest req = UnityWebRequest.Get(DONKI_URL))
+            string url = APIConfig.BuildUrl(APIConfig.DONKI_NOTIFICATIONS_URL, "type=all");
+
+            using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
-                req.timeout = 5;
+                req.timeout = 7;
                 yield return req.SendWebRequest();
 
                 if (req.result == UnityWebRequest.Result.Success)
@@ -57,4 +67,3 @@ namespace NASA.ProjectStarbridge
         }
     }
 }
-
