@@ -897,19 +897,22 @@
 
     #menu {
       align-items: center;
-      background: linear-gradient(90deg, rgba(7, 16, 28, 0.96) 0%, rgba(7, 16, 28, 0.9) 34%, rgba(7, 16, 28, 0.45) 65%, transparent);
-      padding: 85px 6vw 55px;
-      overflow: auto;
+      background: linear-gradient(90deg, rgba(7, 16, 28, 0.97) 0%, rgba(7, 16, 28, 0.92) 36%, rgba(7, 16, 28, 0.5) 68%, transparent);
+      padding: clamp(14px, 2.5vh, 32px) clamp(16px, 4vw, 48px);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 159, 28, 0.4) transparent;
     }
 
     .menuHeader {
       position: absolute;
-      left: 6vw;
-      right: 5vw;
-      top: 28px;
+      left: clamp(16px, 4vw, 48px);
+      right: clamp(16px, 4vw, 48px);
+      top: 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      z-index: 5;
     }
 
     .menuHeader .edition {
@@ -920,9 +923,10 @@
     }
 
     .menuContent {
-      max-width: 510px;
+      max-width: 500px;
       width: 100%;
       position: relative;
+      margin-top: 24px;
     }
 
     .menuTag {
@@ -931,20 +935,20 @@
       border: 1px solid rgba(120, 222, 235, 0.3);
       background: rgba(120, 222, 235, 0.08);
       border-radius: 30px;
-      padding: 7px 14px;
+      padding: 4px 10px;
       color: var(--cyan);
-      font-size: 9px;
-      letter-spacing: 1.6px;
+      font-size: 8.5px;
+      letter-spacing: 1.5px;
       font-weight: 700;
       font-family: var(--font-display);
     }
 
     .menuContent h1 {
-      font-size: clamp(38px, 5.4vw, 72px);
-      line-height: 1.04;
+      font-size: clamp(24px, 3.4vw, 44px);
+      line-height: 1.06;
       font-weight: 800;
-      letter-spacing: -2px;
-      margin: 22px 0 18px;
+      letter-spacing: -1px;
+      margin: 8px 0 6px;
       font-family: var(--font-display);
     }
 
@@ -954,52 +958,59 @@
     }
 
     .menuDescription {
-      font-size: 13px;
-      line-height: 1.8;
+      font-size: 12px;
+      line-height: 1.5;
       color: #afc0d1;
-      max-width: 430px;
+      max-width: 440px;
+      margin-bottom: 10px;
     }
 
     .environmentLabel {
-      font-size: 9px;
-      letter-spacing: 2px;
+      font-size: 8.5px;
+      letter-spacing: 1.6px;
       color: var(--muted);
       font-weight: 800;
-      margin: 24px 0 10px;
+      margin: 10px 0 6px;
       font-family: var(--font-display);
     }
 
     .environments {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
 
     .envChoice {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex: 1;
       text-align: left;
-      padding: 13px;
+      padding: 10px 12px;
       border: 1px solid var(--line);
-      border-radius: 9px;
-      background: rgba(11, 23, 41, 0.7);
+      border-radius: 8px;
+      background: rgba(11, 23, 41, 0.75);
       color: var(--ink);
       transition: all .2s;
+      cursor: pointer;
+    }
+
+    .envChoice:hover {
+      border-color: rgba(255, 189, 105, 0.6);
+      transform: translateY(-1px);
     }
 
     .envChoice.selected {
       border-color: var(--accent);
-      background: rgba(255, 189, 105, 0.1);
-      box-shadow: 0 0 20px rgba(255, 189, 105, 0.15);
+      background: rgba(255, 189, 105, 0.12);
+      box-shadow: 0 0 20px rgba(255, 189, 105, 0.2);
     }
 
     .planet {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       flex: none;
       border-radius: 50%;
-      box-shadow: inset -10px -4px 12px rgba(0, 0, 0, 0.7), 0 0 16px rgba(255, 255, 255, 0.08);
+      box-shadow: inset -8px -3px 10px rgba(0, 0, 0, 0.7), 0 0 14px rgba(255, 255, 255, 0.08);
       background: radial-gradient(circle at 35% 30%, #d3d1c8, #777c84 45%, #414b55);
     }
 
@@ -1007,43 +1018,69 @@
       background: radial-gradient(circle at 30% 25%, #edaf7c, #ba6544 48%, #76422e);
     }
 
+    .envText {
+      flex: 1;
+    }
+
     .envChoice b {
       display: block;
-      font-size: 13px;
+      font-size: 11.5px;
       font-weight: 700;
       font-family: var(--font-display);
     }
 
     .envChoice small {
       display: block;
-      font-size: 9px;
-      letter-spacing: .5px;
+      font-size: 8.5px;
+      letter-spacing: .4px;
       color: var(--muted);
-      margin-top: 4px;
+      margin-top: 2px;
       font-family: var(--font-mono);
+    }
+
+    .modeLaunchBadge {
+      font-size: 8.5px;
+      font-weight: 800;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: var(--accent);
+      color: #07101c;
+      letter-spacing: 0.5px;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+
+    .envChoice:not(.selected) .modeLaunchBadge {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--muted);
     }
 
     /* Site Selection (NASA LOLA) */
     .siteChoiceWrap {
-      margin-top: 14px;
+      margin-top: 8px;
     }
 
     .siteChoiceGroup {
       display: flex;
       gap: 8px;
-      margin-top: 6px;
+      margin-top: 4px;
     }
 
     .siteBtn {
       flex: 1;
-      padding: 9px 12px;
-      font-size: 11px;
-      border-radius: 7px;
+      padding: 7px 10px;
+      font-size: 10px;
+      border-radius: 6px;
       border: 1px solid var(--line);
       background: rgba(255, 255, 255, 0.03);
       color: #cad8e5;
       text-align: left;
       transition: all .2s;
+      cursor: pointer;
+    }
+
+    .siteBtn:hover {
+      border-color: rgba(120, 222, 235, 0.5);
     }
 
     .siteBtn.selected {
@@ -1054,35 +1091,90 @@
 
     .siteBtn b {
       display: block;
-      font-size: 11px;
+      font-size: 10.5px;
       font-family: var(--font-display);
     }
 
     .siteBtn small {
       display: block;
-      font-size: 8px;
+      font-size: 7.5px;
       color: var(--cyan);
-      letter-spacing: .5px;
+      letter-spacing: .4px;
       font-family: var(--font-mono);
     }
 
     #startButton {
       width: 100%;
-      margin-top: 18px;
+      margin-top: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 17px 20px;
-      font-size: 13px;
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 800;
       font-family: var(--font-display);
-      letter-spacing: 1px;
+      letter-spacing: 1.2px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ff9f1c 0%, #ff5e36 100%);
+      color: #07101c;
+      box-shadow: 0 0 25px rgba(255, 159, 28, 0.55), 0 4px 15px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      transition: all .25s ease;
+      animation: startPulse 2s infinite ease-in-out;
+    }
+
+    #startButton:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 35px rgba(255, 159, 28, 0.85), 0 6px 20px rgba(0, 0, 0, 0.6);
+      background: linear-gradient(135deg, #ffb347 0%, #ff7043 100%);
+    }
+
+    #startButton:active {
+      transform: translateY(1px);
+    }
+
+    .startBtnText {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      letter-spacing: 1.4px;
+    }
+
+    .startBtnSub {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.25);
+      color: #fff;
+      letter-spacing: 0.8px;
+      font-family: var(--font-mono);
+    }
+
+    @keyframes startPulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(255, 159, 28, 0.45); }
+      50% { box-shadow: 0 0 38px rgba(255, 159, 28, 0.85), 0 0 10px rgba(255, 255, 255, 0.4); }
+    }
+
+    .quickLaunchHint {
+      margin-top: 6px;
+      font-size: 9.5px;
+      color: #8da4be;
+      font-family: var(--font-mono);
+      letter-spacing: 0.4px;
+      text-align: center;
     }
 
     .menuControls {
       display: flex;
-      gap: 18px;
+      gap: 14px;
       align-items: center;
-      margin-top: 18px;
+      margin-top: 10px;
+      font-size: 11px;
+      color: #9cb1c5;
+    }
       color: var(--muted);
       font-size: 10px;
       line-height: 1.7;
@@ -2376,37 +2468,40 @@
       <p class="menuDescription">Command humanity's next outpost. Make crucial life-support decisions, navigate space
         weather from NASA satellites, and conduct authentic space experiments.</p>
 
-      <div class="environmentLabel">01 — CHOOSE YOUR EXPEDITION MODE</div>
+      <div class="environmentLabel">01 — CHOOSE YOUR EXPEDITION MODE <small style="color:var(--accent); font-weight:normal;">(CLICK TO SELECT OR LAUNCH)</small></div>
       <div class="environments">
-        <button class="envChoice selected" id="moonChoice" aria-pressed="true">
+        <button class="envChoice selected" id="moonChoice" aria-pressed="true" title="Click to launch Lunar Expedition">
           <span class="planet"></span>
-          <span><b>MODE 1: LUNAR FRONTIER</b><small>MOON EXPEDITION · 0.16 g</small></span>
+          <span class="envText"><b>MODE 1: LUNAR FRONTIER</b><small>MOON EXPEDITION · 0.16 g</small></span>
+          <span class="modeLaunchBadge">LAUNCH ▶</span>
         </button>
-        <button class="envChoice" id="marsChoice" aria-pressed="false">
+        <button class="envChoice" id="marsChoice" aria-pressed="false" title="Click to switch / launch Mars Expedition">
           <span class="planet mars"></span>
-          <span><b>MODE 2: RED PLANET RISING</b><small>MARS EXPEDITION · 0.38 g</small></span>
+          <span class="envText"><b>MODE 2: RED PLANET RISING</b><small>MARS EXPEDITION · 0.38 g</small></span>
+          <span class="modeLaunchBadge">LAUNCH ▶</span>
         </button>
       </div>
 
       <!-- NASA LOLA Site Selection for the Moon -->
       <div class="siteChoiceWrap" id="lolaSiteWrap">
-        <div class="environmentLabel" style="margin-top:14px">02 — LUNAR SITE SELECTION (NASA LOLA DATA)</div>
+        <div class="environmentLabel">02 — LUNAR SITE SELECTION (NASA LOLA DATA)</div>
         <div class="siteChoiceGroup">
-          <button class="siteBtn selected" id="siteShackleton" data-factor="1.0">
+          <button class="siteBtn selected" id="siteShackleton" data-factor="1.0" title="Click to select Shackleton Rim">
             <b>Shackleton Rim (88.9°S)</b>
             <small>86% Illumination · Near Subsurface Ice</small>
           </button>
-          <button class="siteBtn" id="siteConnectingRidge" data-factor="1.15">
+          <button class="siteBtn" id="siteConnectingRidge" data-factor="1.15" title="Click to select Connecting Ridge">
             <b>Connecting Ridge (89.4°S)</b>
             <small>92% Quasi-Continuous Sunlight (+15% Solar)</small>
           </button>
         </div>
       </div>
 
-      <button class="btn primary" id="startButton" disabled>
-        <span>INITIALIZING SIMULATION…</span>
-        <span>↗</span>
+      <button class="btn primary" id="startButton" onclick="if(window.startGame)window.startGame();else window.__startRequested=true;">
+        <span class="startBtnText">🚀 BEGIN EXPEDITION</span>
+        <span class="startBtnSub">PRESS [ENTER] ↗</span>
       </button>
+      <div class="quickLaunchHint">⚡ Click button above, press [ENTER], or click the active mode card to launch instantly</div>
 
       <div class="menuControls" id="menuControlDesktop">
         <span><b>WASD</b> move · <b>Drag</b> look</span>
@@ -5814,6 +5909,12 @@
           }
           return;
         }
+        if (G.state === 'menu' && (e.code === 'Enter' || e.code === 'Space')) {
+          if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+          e.preventDefault();
+          startGame();
+          return;
+        }
         if (G.state === 'dialogue' && ['KeyE', 'Enter', 'Space'].includes(e.code)) {
           e.preventDefault(); if (!e.repeat) dialogueNext(); return;
         }
@@ -5931,8 +6032,24 @@
         $('#gravityLabel').textContent = d.gravity;
       }
 
-      $('#moonChoice').onclick = () => { applyEnvironment('moon'); Audio.click(); };
-      $('#marsChoice').onclick = () => { applyEnvironment('mars'); Audio.click(); };
+      $('#moonChoice').onclick = () => {
+        if (environment === 'moon') {
+          startGame();
+        } else {
+          applyEnvironment('moon');
+          Audio.click();
+        }
+      };
+      $('#marsChoice').onclick = () => {
+        if (environment === 'mars') {
+          startGame();
+        } else {
+          applyEnvironment('mars');
+          Audio.click();
+        }
+      };
+      $('#moonChoice').ondblclick = () => { applyEnvironment('moon'); startGame(); };
+      $('#marsChoice').ondblclick = () => { applyEnvironment('mars'); startGame(); };
 
       /* LOLA site buttons */
       $('#siteShackleton').onclick = () => {
@@ -5942,12 +6059,20 @@
         toast('Shackleton Crater selected (NASA LOLA: 86% Illumination)');
         Audio.click();
       };
+      $('#siteShackleton').ondblclick = () => {
+        lolaSolarMultiplier = 1.0;
+        startGame();
+      };
       $('#siteConnectingRidge').onclick = () => {
         lolaSolarMultiplier = 1.15;
         $('#siteConnectingRidge').classList.add('selected');
         $('#siteShackleton').classList.remove('selected');
         toast('Connecting Ridge selected (NASA LOLA: 92% Sunlight · +15% Solar Power)');
         Audio.click();
+      };
+      $('#siteConnectingRidge').ondblclick = () => {
+        lolaSolarMultiplier = 1.15;
+        startGame();
       };
 
       function pauseGame() { if (G.state !== 'playing') return; Audio.click(); state('pause'); }
@@ -6011,6 +6136,7 @@
         ], () => toast('Objective: Meet Commander Vega · Follow the amber beacon.', 'good'));
       }
 
+      window.startGame = startGame;
       $('#startButton').onclick = startGame;
       $('#restartButton').onclick = startGame;
       $('#homeButton').onclick = mainMenu;
@@ -6808,7 +6934,7 @@
       renderMeters(); renderMission(); drawMap();
 
       $('#startButton').disabled = false;
-      $('#startButton').innerHTML = '<span>BEGIN EXPEDITION</span><span>↗</span>';
+      $('#startButton').innerHTML = '<span class="startBtnText">🚀 BEGIN EXPEDITION</span><span class="startBtnSub">PRESS [ENTER] ↗</span>';
       $('#loading').classList.add('hidden');
 
       canvas.addEventListener('webglcontextlost', e => {
@@ -6817,6 +6943,9 @@
       });
 
       frame();
+      if (window.__startRequested) {
+        setTimeout(startGame, 50);
+      }
     })();
   </script>
   <!-- NASA Open API Subsystems & Key Configuration -->
