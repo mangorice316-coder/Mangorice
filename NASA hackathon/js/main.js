@@ -1,4 +1,5 @@
-// NASA JUNIOR ASTRONAUT MISSION TRAINER - MASTER APPLICATION CONTROLLER
+// ASTROCADE – BEYOND THE HORIZON
+// MASTER APPLICATION ROUTER & CONTROLLER
 const AppRouter = (() => {
   let currentHub = 'command';
 
@@ -10,7 +11,7 @@ const AppRouter = (() => {
     { id: 'laboratory', name: 'Laboratory', icon: '🔬' },
     { id: 'simulator', name: 'Flight Sim', icon: '🛸' },
     { id: 'achievements', name: 'Medals', icon: '🏆' },
-    { id: 'profile', name: 'Profile', icon: '🧑‍🚀' }
+    { id: 'profile', name: 'Passport', icon: '🛂' }
   ];
 
   function init() {
@@ -34,7 +35,7 @@ const AppRouter = (() => {
   }
 
   function navigate(hubId) {
-    SoundEngine.click();
+    if (typeof SoundEngine !== 'undefined' && SoundEngine.click) SoundEngine.click();
     currentHub = hubId;
 
     // Update Dock
@@ -48,35 +49,34 @@ const AppRouter = (() => {
 
     // Handle view rendering
     if (hubId === 'command') {
-      // 3D Scene is prominent
       const cmdView = document.getElementById('commandHubView');
       if (cmdView) cmdView.classList.remove('active');
     } else if (hubId === 'academy') {
-      AstronautAcademy.renderHub('academyHubView');
+      if (typeof AstronautAcademy !== 'undefined') AstronautAcademy.renderHub('academyHubView');
       const v = document.getElementById('academyHubView');
       if (v) v.classList.add('active');
     } else if (hubId === 'missions') {
-      MissionControl.renderHub('missionsHubView');
+      if (typeof MissionControl !== 'undefined') MissionControl.renderHub('missionsHubView');
       const v = document.getElementById('missionsHubView');
       if (v) v.classList.add('active');
     } else if (hubId === 'planetarium') {
-      PlanetExplorer.renderHub('planetariumHubView');
+      if (typeof PlanetExplorer !== 'undefined') PlanetExplorer.renderHub('planetariumHubView');
       const v = document.getElementById('planetariumHubView');
       if (v) v.classList.add('active');
     } else if (hubId === 'laboratory') {
-      SpaceLaboratory.renderHub('laboratoryHubView');
+      if (typeof SpaceLaboratory !== 'undefined') SpaceLaboratory.renderHub('laboratoryHubView');
       const v = document.getElementById('laboratoryHubView');
       if (v) v.classList.add('active');
     } else if (hubId === 'simulator') {
-      SpacecraftSimulator.renderHub('simulatorHubView');
+      if (typeof SpacecraftSimulator !== 'undefined') SpacecraftSimulator.renderHub('simulatorHubView');
       const v = document.getElementById('simulatorHubView');
       if (v) v.classList.add('active');
     } else if (hubId === 'achievements') {
-      AchievementCenter.renderHub('achievementsHubView');
+      if (typeof AchievementCenter !== 'undefined') AchievementCenter.renderHub('achievementsHubView');
       const v = document.getElementById('achievementsHubView');
       if (v) v.classList.add('active');
     } else if (hubId === 'profile') {
-      openProfileModal();
+      PlayerProfile.renderPassport();
     }
   }
 
@@ -84,13 +84,30 @@ const AppRouter = (() => {
     const screen = document.getElementById('cinematicScreen');
     const startBtn = document.getElementById('startJourneyBtn');
     const skipBtn = document.getElementById('skipIntroBtn');
+    const introNameInput = document.getElementById('introCadetName');
+
+    // Handle Grade buttons on intro screen
+    document.querySelectorAll('.introGradeBtn').forEach(btn => {
+      btn.onclick = () => {
+        if (typeof SoundEngine !== 'undefined' && SoundEngine.click) SoundEngine.click();
+        document.querySelectorAll('.introGradeBtn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        const gid = btn.getAttribute('data-grade');
+        if (gid) PlayerProfile.setGrade(gid);
+      };
+    });
 
     if (!screen) return;
 
     const dismissIntro = () => {
-      SoundEngine.missionStart();
+      if (typeof SoundEngine !== 'undefined' && SoundEngine.missionStart) SoundEngine.missionStart();
+      if (introNameInput && introNameInput.value.trim()) {
+        PlayerProfile.profile.name = introNameInput.value.trim();
+        PlayerProfile.save();
+      }
       screen.classList.add('hidden');
-      PlayerProfile.unlockAchievement('first_launch', 'First Launch');
+      PlayerProfile.unlockAchievement('first_launch', 'First Launch Medal');
+      PlayerProfile.updateUI();
     };
 
     if (startBtn) startBtn.onclick = dismissIntro;
@@ -104,21 +121,20 @@ const AppRouter = (() => {
     const nameInput = document.getElementById('inputAstronautName');
 
     if (closeBtn) closeBtn.onclick = () => {
-      SoundEngine.click();
+      if (typeof SoundEngine !== 'undefined' && SoundEngine.click) SoundEngine.click();
       modal.classList.remove('on');
     };
 
     if (saveBtn) saveBtn.onclick = () => {
-      SoundEngine.success();
+      if (typeof SoundEngine !== 'undefined' && SoundEngine.success) SoundEngine.success();
       if (nameInput && nameInput.value.trim()) {
         PlayerProfile.profile.name = nameInput.value.trim();
       }
       PlayerProfile.save();
       modal.classList.remove('on');
-      toast('Astronaut Profile & Suit Configuration Saved!');
+      if (typeof toast === 'function') toast('Astronaut Profile & Suit Configuration Saved!');
     };
 
-    // Render avatar and suit options
     renderProfileOptions();
   }
 
@@ -137,7 +153,7 @@ const AppRouter = (() => {
 
       avatarGrid.querySelectorAll('.avatarOption').forEach(el => {
         el.onclick = () => {
-          SoundEngine.click();
+          if (typeof SoundEngine !== 'undefined' && SoundEngine.click) SoundEngine.click();
           avatarGrid.querySelectorAll('.avatarOption').forEach(x => x.classList.remove('selected'));
           el.classList.add('selected');
           PlayerProfile.profile.avatar = el.getAttribute('data-id');
@@ -156,7 +172,7 @@ const AppRouter = (() => {
 
       colorRow.querySelectorAll('.colorSwatch').forEach(el => {
         el.onclick = () => {
-          SoundEngine.click();
+          if (typeof SoundEngine !== 'undefined' && SoundEngine.click) SoundEngine.click();
           colorRow.querySelectorAll('.colorSwatch').forEach(x => x.classList.remove('selected'));
           el.classList.add('selected');
           const colorId = el.getAttribute('data-id');
@@ -185,7 +201,7 @@ const AppRouter = (() => {
   }
 
   function openProfileModal() {
-    SoundEngine.click();
+    if (typeof SoundEngine !== 'undefined' && SoundEngine.click) SoundEngine.click();
     const modal = document.getElementById('profileModal');
     const nameInput = document.getElementById('inputAstronautName');
     if (modal) {
@@ -201,10 +217,12 @@ const AppRouter = (() => {
     const chat = document.getElementById('novaChat');
     if (fab && chat) {
       fab.onclick = () => {
-        SoundEngine.novaChime();
+        if (typeof SoundEngine !== 'undefined' && SoundEngine.novaChime) SoundEngine.novaChime();
         chat.classList.toggle('on');
         if (chat.classList.contains('on')) {
-          NovaAI.renderNovaChat('novaChat');
+          if (typeof NovaAI !== 'undefined' && NovaAI.renderNovaChat) {
+            NovaAI.renderNovaChat('novaChat');
+          }
         }
       };
     }
@@ -230,9 +248,9 @@ window.addEventListener('keydown', e => {
   else if (e.key === 'n' || e.key === 'N') {
     const chat = document.getElementById('novaChat');
     if (chat) {
-      SoundEngine.novaChime();
+      if (typeof SoundEngine !== 'undefined' && SoundEngine.novaChime) SoundEngine.novaChime();
       chat.classList.toggle('on');
-      if (chat.classList.contains('on')) NovaAI.renderNovaChat('novaChat');
+      if (chat.classList.contains('on') && typeof NovaAI !== 'undefined') NovaAI.renderNovaChat('novaChat');
     }
   }
 });

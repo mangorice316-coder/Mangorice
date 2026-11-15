@@ -65,7 +65,7 @@ const AstronautAcademy = (() => {
     MODULES.forEach(m => {
       const isDone = PlayerProfile.profile.completedModules.includes(m.id);
       html += `
-        <div class="hubCard glass-panel" onclick="AstronautAcademy.startModule('${m.id}')">
+        <div class="hubCard glass-panel" style="cursor:default;">
           <div>
             <div class="cardBadge" style="color:${isDone ? 'var(--green)' : 'var(--cyan)'}">
               ${isDone ? '✓ CERTIFIED' : m.badge} · +${m.xp} XP
@@ -78,9 +78,14 @@ const AstronautAcademy = (() => {
             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;">
               ${m.concepts.map(c => `<span style="font-size:9px;background:rgba(255,255,255,0.06);padding:3px 7px;border-radius:4px;color:var(--silver);">${c}</span>`).join('')}
             </div>
-            <button class="btn ${isDone ? 'primary' : 'cyan'}" style="width:100%;">
-              ${isDone ? 'Replay Simulation' : 'Begin Training →'}
-            </button>
+            <div style="display:flex;gap:8px;">
+              <button class="btn primary" style="flex:1.2;font-size:11px;padding:8px 8px;" onclick="OutpostMissionSystem.start3DMission('${m.id}')" title="Train in the Realistic 3D Outpost Surface">
+                🚀 3D Field Training →
+              </button>
+              <button class="btn" style="flex:0.8;font-size:11px;padding:8px 6px;" onclick="AstronautAcademy.startLabModule('${m.id}')" title="Diagnostic Systems Simulator">
+                🔬 Lab Sim
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -91,11 +96,83 @@ const AstronautAcademy = (() => {
   }
 
   function startModule(id) {
-    SoundEngine.click();
+    if (typeof SoundEngine !== 'undefined' && SoundEngine.click) SoundEngine.click();
     const modal = document.getElementById('interactiveModal');
     const content = document.getElementById('interactiveModalContent');
     if (!modal || !content) return;
 
+    const m = MODULES.find(mod => mod.id === id);
+    if (!m) return;
+
+    modal.classList.add('on');
+    content.innerHTML = `
+      <div style="padding:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(66,232,255,0.3);padding-bottom:12px;margin-bottom:16px;">
+          <div>
+            <div class="eyebrow" style="color:var(--accent);">${m.badge} · ASTRONAUT FIELD TRAINING</div>
+            <h2 style="font-family:var(--font-display);margin:2px 0;">${m.name}</h2>
+            <span style="font-family:var(--font-mono);font-size:11px;color:var(--cyan);">NASA ASETC SURFACE CERTIFICATION</span>
+          </div>
+          <button class="iconBtn" onclick="AstronautAcademy.closeModal()">✕</button>
+        </div>
+
+        <div style="background:rgba(5,8,22,0.7);border-left:4px solid var(--cyan);padding:14px 18px;border-radius:8px;margin-bottom:16px;">
+          <p style="font-size:14px;color:var(--ink);line-height:1.6;margin:0;">
+            ${m.desc}
+          </p>
+        </div>
+
+        <div class="glass-panel" style="background:rgba(11,21,48,0.7);padding:14px;border-radius:10px;margin-bottom:18px;">
+          <strong style="color:var(--accent);font-family:var(--font-display);font-size:12px;letter-spacing:1px;display:block;margin-bottom:8px;">
+            ASTRONAUT COMPETENCIES & CONCEPTS:
+          </strong>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            ${m.concepts.map(c => `<span style="font-size:11px;background:rgba(66,232,255,0.12);border:1px solid rgba(66,232,255,0.3);padding:4px 10px;border-radius:6px;color:var(--white);">${c}</span>`).join('')}
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:14px;margin-bottom:20px;">
+          <div class="glass-panel" style="background:linear-gradient(135deg, rgba(11,21,48,0.9), rgba(5,8,22,0.9));border:1px solid var(--cyan);padding:16px;border-radius:10px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <span class="liveDot"></span>
+                <strong style="color:var(--cyan);font-family:var(--font-display);font-size:14px;">3D SURFACE FIELD MISSION</strong>
+              </div>
+              <p style="font-size:12px;color:var(--silver);margin:0 0 12px;line-height:1.5;">
+                Deploy directly onto the real-time 3D planetary outpost! Walk and drive the exploration rover across the terrain, interact with outpost modules, and track field objectives on your top-left To-Do HUD.
+              </p>
+            </div>
+            <button class="btn primary" style="width:100%;font-size:12px;font-weight:800;" onclick="OutpostMissionSystem.start3DMission('${m.id}')">
+              🚀 Deploy in 3D (Command Center) →
+            </button>
+          </div>
+
+          <div class="glass-panel" style="background:rgba(11,21,48,0.7);border:1px solid var(--panel-border);padding:16px;border-radius:10px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <strong style="color:var(--white);font-family:var(--font-display);font-size:14px;">🔬 SYSTEMS LAB WORKBENCH</strong>
+              </div>
+              <p style="font-size:12px;color:var(--silver);margin:0 0 12px;line-height:1.5;">
+                Run the diagnostic physics lab simulator, conduct technical calculations, and test subsystems.
+              </p>
+            </div>
+            <button class="btn" style="width:100%;font-size:12px;" onclick="AstronautAcademy.startLabModule('${m.id}')">
+              Open Systems Lab ↗
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;">
+          <button class="btn" onclick="AstronautAcademy.closeModal()">Close Briefing</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function startLabModule(id) {
+    const modal = document.getElementById('interactiveModal');
+    const content = document.getElementById('interactiveModalContent');
+    if (!modal || !content) return;
     modal.classList.add('on');
     if (id === 'zerog') runZeroGModule(content);
     else if (id === 'suit') runSuitModule(content);
@@ -670,6 +747,7 @@ const AstronautAcademy = (() => {
   return {
     renderHub,
     startModule,
+    startLabModule,
     resolveEmergencyStep,
     finishModule,
     closeModal
