@@ -6400,6 +6400,15 @@
         }
       }
 
+      /* Open-World POIs for Radar & Tactical Compass */
+      const OPEN_POIS = [
+        { x: -110, z: 95, col: '#44d7ee', name: 'Shackleton Ice' },
+        { x: 145, z: -110, col: '#ffbd4a', name: 'Solar Substation' },
+        { x: -160, z: -130, col: '#ffd166', name: 'Surveyor Relic' },
+        { x: 130, z: 125, col: '#78e094', name: 'Lava Tube' },
+        { x: -85, z: -155, col: '#a384ff', name: 'Magnetometer' }
+      ];
+
       function updatePlayer(dt) {
         if (typeof OutpostMissionSystem !== 'undefined' && OutpostMissionSystem.isDrivingRover) {
           OutpostMissionSystem.updateRoverDrive(dt, input.keys, cam.yaw);
@@ -6448,7 +6457,27 @@
 
         updateSimulation(dt, moving, sprinting);
 
-        function updateNPCs(dt, roam = true) {
+        // Real-time Navigational Compass Ribbon update
+        const compassEl = $('#compassBearing');
+        const poiEl = $('#compassNearestPoi');
+        if (compassEl) {
+          let deg = Math.round((-player.rotation.y * 180 / Math.PI) % 360);
+          if (deg < 0) deg += 360;
+          const cardinals = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+          const cardIdx = Math.round(deg / 45) % 8;
+          compassEl.textContent = String(deg).padStart(3, '0') + '° ' + cardinals[cardIdx];
+        }
+        if (poiEl) {
+          let nearestPoi = 'BASE HUB', minDist = Math.hypot(player.position.x, player.position.z);
+          OPEN_POIS.forEach(p => {
+            const d = Math.hypot(player.position.x - p.x, player.position.z - p.z);
+            if (d < minDist) { minDist = d; nearestPoi = p.name; }
+          });
+          poiEl.textContent = nearestPoi.toUpperCase() + ' ' + Math.round(minDist) + 'M';
+        }
+      }
+
+      function updateNPCs(dt, roam = true) {
           const active = currentStep();
           npcs.forEach(n => {
             const m = n.mesh, u = m.userData, d = Math.hypot(player.position.x - m.position.x, player.position.z - m.position.z);
@@ -6712,14 +6741,7 @@
           });
 
           // Render 5 Open-World Exploration POIs
-          const openPois = [
-            { x: -110, z: 95, col: '#44d7ee', name: 'Shackleton Ice' },
-            { x: 145, z: -110, col: '#ffbd4a', name: 'Solar Substation' },
-            { x: -160, z: -130, col: '#ffd166', name: 'Surveyor Relic' },
-            { x: 130, z: 125, col: '#78e094', name: 'Lava Tube' },
-            { x: -85, z: -155, col: '#a384ff', name: 'Magnetometer' }
-          ];
-          openPois.forEach(p => {
+          OPEN_POIS.forEach(p => {
             const [px, py] = point(p.x, p.z);
             if (px >= 6 && px <= w - 6 && py >= 6 && py <= w - 6) {
               c.fillStyle = p.col;
@@ -6755,34 +6777,6 @@
           c.restore();
           c.strokeStyle = 'rgba(128, 189, 212, 0.2)'; c.lineWidth = 2; c.strokeRect(1, 1, w - 2, w - 2);
         }
-
-        let [px, py] = point(player.position.x, player.position.z);
-        px = clamp(px, 9, w - 9); py = clamp(py, 9, w - 9);
-        c.save(); c.translate(px, py); c.rotate(-player.rotation.y + Math.PI);
-        c.fillStyle = '#fff'; c.shadowColor = '#a1e6ff'; c.shadowBlur = 8;
-        c.beginPath(); c.moveTo(0, -8); c.lineTo(5.5, 6); c.lineTo(0, 3); c.lineTo(-5.5, 6); c.closePath(); c.fill();
-        c.restore();
-        c.strokeStyle = 'rgba(128, 189, 212, 0.2)'; c.lineWidth = 2; c.strokeRect(1, 1, w - 2, w - 2);
-
-        // Real-time Navigational Compass Ribbon update
-        const compassEl = $('#compassBearing');
-        const poiEl = $('#compassNearestPoi');
-        if (compassEl) {
-          let deg = Math.round((-player.rotation.y * 180 / Math.PI) % 360);
-          if (deg < 0) deg += 360;
-          const cardinals = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-          const cardIdx = Math.round(deg / 45) % 8;
-          compassEl.textContent = String(deg).padStart(3, '0') + '° ' + cardinals[cardIdx];
-        }
-        if (poiEl) {
-          let nearestPoi = 'BASE HUB', minDist = Math.hypot(player.position.x, player.position.z);
-          openPois.forEach(p => {
-            const d = Math.hypot(player.position.x - p.x, player.position.z - p.z);
-            if (d < minDist) { minDist = d; nearestPoi = p.name; }
-          });
-          poiEl.textContent = nearestPoi.toUpperCase() + ' ' + Math.round(minDist) + 'M';
-        }
-      }
 
       /* ========================================================
          OUTPOST OPERATIONS & CONSTRAINT-BASED LIVING SIMULATION
@@ -6901,32 +6895,37 @@
       let uiTimer = 0, mapTimer = 0, expTimer = 0;
       function frame() {
         requestAnimationFrame(frame);
-        const dt = Math.min(clock.getDelta(), 0.05);
-        const animate = G.state !== 'pause';
-        if (animate) visualTime += dt;
+        try {
+          const dt = Math.min(clock.getDelta(), 0.05);
+          const animate = G.state !== 'pause';
+          if (animate) visualTime += dt;
 
-        if (G.state === 'playing') {
-          updatePlayer(dt);
-          if (G.state === 'playing') { updateNPCs(dt, true); updateStep(dt); }
-        } else if (G.state === 'menu') {
-          updateNPCs(dt * 0.55, true);
-        } else if (G.state === 'dialogue') {
-          updateDialogue(dt); updateNPCs(dt, false);
-        } else if (G.state === 'launch') {
-          updateLaunch(dt);
+          if (G.state === 'playing') {
+            updatePlayer(dt);
+            if (G.state === 'playing') { updateNPCs(dt, true); updateStep(dt); }
+          } else if (G.state === 'menu') {
+            updateNPCs(dt * 0.55, true);
+          } else if (G.state === 'dialogue') {
+            updateDialogue(dt); updateNPCs(dt, false);
+          } else if (G.state === 'launch') {
+            updateLaunch(dt);
+          }
+
+          if (animate) updateWorld(dt);
+          updateCamera(dt);
+
+          if (!['menu', 'result', 'launch'].includes(G.state)) updateNavigation(); else marker.visible = false;
+
+          uiTimer += dt; mapTimer += dt; expTimer += dt;
+          if (uiTimer > 0.25) { uiTimer = 0; if (G.state !== 'menu') renderMeters(); }
+          if (mapTimer > 0.1) { mapTimer = 0; if (G.state !== 'menu' && G.state !== 'launch') drawMap(); }
+          if (expTimer > 0.04) { expTimer = 0; if (G.state === 'activity') drawExperiment(); }
+
+          renderer.render(scene, camera);
+        } catch (err) {
+          console.error('Surface game frame error:', err);
+          try { renderer.render(scene, camera); } catch (_) {}
         }
-
-        if (animate) updateWorld(dt);
-        updateCamera(dt);
-
-        if (!['menu', 'result', 'launch'].includes(G.state)) updateNavigation(); else marker.visible = false;
-
-        uiTimer += dt; mapTimer += dt; expTimer += dt;
-        if (uiTimer > 0.25) { uiTimer = 0; if (G.state !== 'menu') renderMeters(); }
-        if (mapTimer > 0.1) { mapTimer = 0; if (G.state !== 'menu' && G.state !== 'launch') drawMap(); }
-        if (expTimer > 0.04) { expTimer = 0; if (G.state === 'activity') drawExperiment(); }
-
-        renderer.render(scene, camera);
       }
 
       applyEnvironment('moon');
