@@ -1,0 +1,1748 @@
+/* NASA JUNIOR ASTRONAUT MISSION TRAINER - AAA DESIGN SYSTEM */
+:root {
+  --bg-deep: #050816;
+  --bg-midnight: #0B1530;
+  --electric-blue: #398BFF;
+  --cyan: #42E8FF;
+  --purple: #7955FF;
+  --white: #F4F8FF;
+  --silver: #B8C5D9;
+  --green: #38D996;
+  --amber: #FFBF5B;
+  --red: #FF5E7E;
+
+  --panel-bg: rgba(11, 21, 48, 0.88);
+  --panel-border: rgba(66, 232, 255, 0.22);
+  --panel-glow: rgba(57, 139, 255, 0.15);
+  --glass-blur: blur(20px);
+
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-deep);
+  color: var(--white);
+  font-family: var(--font-main);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, input, select { font: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* 3D WebGL Canvas Layer */
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 1;
+}
+
+#vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: radial-gradient(circle at center, transparent 45%, rgba(5, 8, 22, 0.75) 100%),
+              linear-gradient(to bottom, rgba(5, 8, 22, 0.4) 0%, transparent 20%, transparent 80%, rgba(5, 8, 22, 0.6) 100%);
+  box-shadow: inset 0 0 160px rgba(5, 8, 22, 0.8);
+}
+
+/* Glassmorphism Panel Utility */
+.glass-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 0 30px var(--panel-glow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: 14px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-height: 44px;
+}
+.btn:hover:not(:disabled) {
+  background: rgba(66, 232, 255, 0.15);
+  border-color: var(--cyan);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(66, 232, 255, 0.25);
+}
+.btn:active:not(:disabled) { transform: translateY(0); }
+
+.btn.primary {
+  background: linear-gradient(135deg, var(--electric-blue), #2563EB);
+  border: 1px solid rgba(120, 222, 255, 0.5);
+  color: #FFFFFF;
+  box-shadow: 0 6px 24px rgba(57, 139, 255, 0.35);
+}
+.btn.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4EA2FF, var(--electric-blue));
+  box-shadow: 0 8px 30px rgba(57, 139, 255, 0.5);
+}
+
+.btn.accent {
+  background: linear-gradient(135deg, var(--amber), #E69D28);
+  border: 1px solid #FFE4A0;
+  color: #1A1305;
+  box-shadow: 0 6px 24px rgba(255, 191, 91, 0.35);
+}
+.btn.accent:hover:not(:disabled) {
+  background: linear-gradient(135deg, #FFD182, var(--amber));
+}
+
+.btn.cyan {
+  background: linear-gradient(135deg, var(--cyan), #1FA8C7);
+  border: 1px solid #A2F5FF;
+  color: #061B24;
+  box-shadow: 0 6px 24px rgba(66, 232, 255, 0.35);
+}
+.btn.cyan:hover:not(:disabled) {
+  background: linear-gradient(135deg, #79EFFF, var(--cyan));
+}
+
+.iconBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+  color: var(--silver);
+  display: inline-grid;
+  place-items: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.iconBtn:hover {
+  background: rgba(66, 232, 255, 0.12);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+/* Typography Helpers */
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+.muted { color: var(--silver); }
+.small { font-size: 12px; line-height: 1.5; }
+
+/* ==========================================================================
+   01. CINEMATIC OPENING SCREEN
+   ========================================================================== */
+#cinematicScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #0B1530 0%, #050816 85%);
+  transition: opacity 0.8s ease, visibility 0.8s;
+}
+#cinematicScreen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.cinematicContent {
+  max-width: 680px;
+  text-align: center;
+  padding: 30px;
+  animation: fadeIn 1.2s ease-out;
+}
+.cinematicLogo {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.nasaInsignia {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #0B3D91 0%, #061B40 100%);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 30px rgba(57, 139, 255, 0.5);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 26px;
+  color: #FC3D21;
+}
+.cinematicTitle {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 900;
+  letter-spacing: 3px;
+  line-height: 1.15;
+  background: linear-gradient(135deg, #FFFFFF 30%, var(--cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+}
+.cinematicSubtitle {
+  font-family: var(--font-mono);
+  font-size: clamp(12px, 2vw, 15px);
+  letter-spacing: 3px;
+  color: var(--amber);
+  margin-top: 10px;
+  text-transform: uppercase;
+}
+.commBox {
+  background: rgba(11, 21, 48, 0.7);
+  border: 1px solid rgba(66, 232, 255, 0.25);
+  border-radius: 12px;
+  padding: 18px 24px;
+  margin: 30px 0;
+  text-align: left;
+  backdrop-filter: blur(10px);
+}
+.commHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--cyan);
+  margin-bottom: 8px;
+}
+.liveBeacon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+  animation: pulseDot 1.8s infinite;
+}
+.commText {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--white);
+}
+
+/* ==========================================================================
+   02. ASTRONAUT RECRUITMENT & PROFILE CUSTOMIZER (MODAL)
+   ========================================================================== */
+#profileModal {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 8, 22, 0.85);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+#profileModal.on {
+  opacity: 1;
+  pointer-events: auto;
+}
+.profileCardWrapper {
+  max-width: 780px;
+  width: 92%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+}
+.profileLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin: 20px 0;
+}
+@media (max-width: 700px) {
+  .profileLayout { grid-template-columns: 1fr; }
+}
+
+.avatarGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+.avatarOption {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.avatarOption:hover {
+  background: rgba(66, 232, 255, 0.12);
+  border-color: var(--cyan);
+}
+.avatarOption.selected {
+  background: rgba(66, 232, 255, 0.22);
+  border-color: var(--cyan);
+  box-shadow: 0 0 18px rgba(66, 232, 255, 0.35);
+}
+.avatarOption img, .avatarOption .avatarSymbol {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  margin: 0 auto 6px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  background: rgba(57, 139, 255, 0.15);
+}
+
+.colorPickerRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.colorSwatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.colorSwatch:hover { transform: scale(1.15); }
+.colorSwatch.selected { border-color: #FFFFFF; box-shadow: 0 0 14px currentColor; transform: scale(1.15); }
+
+/* Holographic ID Badge */
+.holoBadge {
+  background: linear-gradient(135deg, rgba(11, 25, 58, 0.95), rgba(15, 38, 77, 0.85));
+  border: 2px solid rgba(66, 232, 255, 0.4);
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(66, 232, 255, 0.1);
+}
+.holoBadge::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent 45%, rgba(66, 232, 255, 0.08) 50%, transparent 55%);
+  transform: rotate(25deg);
+  pointer-events: none;
+}
+.badgeTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(66, 232, 255, 0.2);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+.badgePhoto {
+  width: 68px;
+  height: 68px;
+  border-radius: 12px;
+  border: 2px solid var(--cyan);
+  background: rgba(5, 8, 22, 0.8);
+  display: grid;
+  place-items: center;
+  font-size: 32px;
+  margin-right: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(66, 232, 255, 0.25);
+}
+.badgeStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+.statItem {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.statItem span { color: var(--silver); display: block; font-size: 9px; text-transform: uppercase; margin-bottom: 2px; }
+.statItem strong { color: var(--cyan); font-size: 13px; font-family: var(--font-display); }
+
+/* ==========================================================================
+   03. TOP HUD & 8-HUB NAVIGATION DOCK
+   ========================================================================== */
+#hudTop {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top));
+  left: 20px;
+  right: 20px;
+  height: 56px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+.brandWrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brandWrap strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 2px;
+  display: block;
+}
+.brandWrap small {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--cyan);
+  display: block;
+}
+
+.hudPills {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hudPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--white);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.hudPill:hover {
+  background: rgba(66, 232, 255, 0.15);
+  border-color: var(--cyan);
+}
+.hudPill.alert {
+  background: rgba(255, 94, 126, 0.18);
+  border-color: var(--red);
+  color: #FFB8C6;
+  animation: alertPulse 1.4s infinite;
+}
+
+/* Floating 8-Hub Navigation Dock */
+#hubDock {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 16px;
+  max-width: 95vw;
+  overflow-x: auto;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(57, 139, 255, 0.2);
+}
+.hubTab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--silver);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  white-space: nowrap;
+  min-width: 68px;
+}
+.hubTab span.tabIcon { font-size: 17px; margin-bottom: 2px; }
+.hubTab:hover {
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.06);
+}
+.hubTab.active {
+  background: rgba(66, 232, 255, 0.16);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 16px rgba(66, 232, 255, 0.3);
+}
+
+/* ==========================================================================
+   04. FULL-SCREEN HUB VIEWS
+   ========================================================================== */
+.hubView {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  flex-direction: column;
+  padding: 85px 24px 85px 24px;
+  overflow-y: auto;
+  background: rgba(5, 8, 22, 0.7);
+  backdrop-filter: blur(8px);
+}
+.hubView.active {
+  display: flex;
+  animation: fadeIn 0.35s ease;
+}
+
+.hubContainer {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.hubHeader {
+  margin-bottom: 22px;
+}
+.hubHeader h1 {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.hubHeader p {
+  color: var(--silver);
+  font-size: 14px;
+  max-width: 650px;
+  margin-top: 4px;
+}
+
+/* Grid Layouts for Hub Items */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 16px;
+}
+.hubCard {
+  border-radius: 12px;
+  padding: 20px;
+  background: rgba(11, 21, 48, 0.7);
+  border: 1px solid var(--panel-border);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.hubCard:hover {
+  transform: translateY(-4px);
+  border-color: var(--cyan);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(66, 232, 255, 0.2);
+}
+.hubCard.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+.cardBadge {
+  align-self: flex-start;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--cyan);
+  margin-bottom: 12px;
+}
+.hubCard h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.hubCard p {
+  color: var(--silver);
+  font-size: 13px;
+  line-height: 1.5;
+  flex-grow: 1;
+  margin-bottom: 16px;
+}
+
+/* ==========================================================================
+   05. INTERACTIVE ACTIVITIES & SIMULATOR OVERLAYS
+   ========================================================================== */
+#interactiveModal {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  display: none;
+  place-items: center;
+  background: rgba(5, 8, 22, 0.88);
+  backdrop-filter: blur(14px);
+  padding: 20px;
+}
+#interactiveModal.on {
+  display: grid;
+}
+.modalContent {
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+}
+.simCanvas {
+  width: 100%;
+  height: 380px;
+  border-radius: 10px;
+  background: #02050E;
+  border: 1px solid rgba(66, 232, 255, 0.3);
+  margin: 16px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Cockpit Flight HUD */
+#flightHud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  font-family: var(--font-mono);
+  color: var(--cyan);
+}
+.hudTopFlight {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(5, 8, 22, 0.6);
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(66, 232, 255, 0.2);
+}
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border: 1px solid rgba(66, 232, 255, 0.5);
+  border-radius: 50%;
+}
+.crosshair::before, .crosshair::after {
+  content: '';
+  position: absolute;
+  background: var(--cyan);
+}
+.crosshair::before { top: 50%; left: -10px; width: 80px; height: 1px; }
+.crosshair::after { left: 50%; top: -10px; height: 80px; width: 1px; }
+
+/* ==========================================================================
+   06. FRIENDLY AI ASSISTANT "NOVA"
+   ========================================================================== */
+#novaFab {
+  position: fixed;
+  bottom: 84px;
+  right: 20px;
+  z-index: 30;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #42E8FF, #398BFF 70%, #153E8A 100%);
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 25px rgba(66, 232, 255, 0.6);
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+#novaFab:hover { transform: scale(1.12); }
+
+#novaChat {
+  position: fixed;
+  bottom: 145px;
+  right: 20px;
+  width: min(380px, 92vw);
+  z-index: 30;
+  display: none;
+  flex-direction: column;
+  padding: 20px;
+  animation: slideUp 0.3s ease;
+}
+#novaChat.on { display: flex; }
+.novaHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+.novaTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.novaAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--cyan);
+  display: grid;
+  place-items: center;
+  color: var(--bg-deep);
+  font-weight: 800;
+  font-size: 14px;
+}
+.novaBody {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--white);
+  max-height: 240px;
+  overflow-y: auto;
+  margin-bottom: 14px;
+}
+.novaSuggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.novaChip {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(66, 232, 255, 0.2);
+  border-radius: 8px;
+  font-size: 11px;
+  color: var(--cyan);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+.novaChip:hover {
+  background: rgba(66, 232, 255, 0.15);
+  border-color: var(--cyan);
+}
+
+/* ==========================================================================
+   07. ACHIEVEMENTS & DISCOVERY CARDS
+   ========================================================================== */
+.medalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.medalCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(11, 21, 48, 0.7);
+  border: 1px solid var(--panel-border);
+}
+.medalIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 191, 91, 0.15);
+  border: 2px solid var(--amber);
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.medalCard.unearned .medalIcon {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--silver);
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+@keyframes alertPulse { 50% { box-shadow: 0 0 24px rgba(255, 94, 126, 0.5); } }
+
+/* Responsive adjustments */
+@media (max-width: 800px) {
+  #hudTop { padding: 0 10px; }
+  .brandWrap strong { font-size: 14px; }
+  .brandWrap small { font-size: 8px; }
+  .hudPills { gap: 6px; }
+  .hudPill { font-size: 9px; padding: 4px 8px; }
+  #hubDock { padding: 4px 8px; gap: 4px; }
+  .hubTab { padding: 6px 10px; min-width: 56px; font-size: 10px; }
+  .hubTab span.tabIcon { font-size: 15px; }
+  .hubView { padding: 75px 14px 75px 14px; }
+}
+
+/* ==========================================================================
+   08. ASTROCADE STORYLINE & GRADE MISSION EXTENSIONS
+   ========================================================================== */
+.introGradeBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--white);
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+.introGradeBtn:hover {
+  background: rgba(66, 232, 255, 0.12);
+  border-color: var(--cyan);
+}
+.introGradeBtn.selected {
+  background: rgba(66, 232, 255, 0.22);
+  border-color: var(--cyan);
+  color: var(--white);
+  box-shadow: 0 0 14px rgba(66, 232, 255, 0.35);
+}
+
+.expeditionCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+.expeditionCard.activeMode {
+  box-shadow: 0 0 20px rgba(66, 232, 255, 0.25);
+}
+
+.mcqOptionBtn:hover:not(:disabled) {
+  background: rgba(66, 232, 255, 0.12) !important;
+  border-color: var(--cyan) !important;
+  transform: translateX(4px);
+}
+.decisionBtn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--white);
+  transition: all 0.2s ease;
+}
+.decisionBtn:hover:not(:disabled) {
+  background: rgba(255, 191, 91, 0.12);
+  border-color: var(--amber);
+  transform: translateX(4px);
+}
+
+.passportModalWrapper {
+  animation: fadeIn 0.25s ease;
+}
+#diplomaCanvas {
+  background: #050816;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+}
+
+/* ==========================================================================
+   09. REALISTIC RPG QUEST / TO-DO LIST HUD (COMMAND CENTER TOP-LEFT)
+   ========================================================================== */
+#todoListHUD {
+  position: fixed;
+  top: 72px;
+  left: 20px;
+  width: 310px;
+  max-width: calc(100vw - 40px);
+  z-index: 15;
+  background: rgba(6, 12, 26, 0.88);
+  border: 1px solid rgba(66, 232, 255, 0.32);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(66, 232, 255, 0.12);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+  transition: all 0.25s ease;
+  user-select: none;
+}
+#todoListHUD:hover {
+  border-color: var(--cyan);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.7), 0 0 26px rgba(66, 232, 255, 0.2);
+}
+
+.todoHeader {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+.todoBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--cyan);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulseDot 1.4s infinite;
+}
+.todoToggleBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--silver);
+  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.todoToggleBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  border-color: var(--cyan);
+}
+#todoTitle {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--white);
+  margin: 3px 0 4px 0;
+  line-height: 1.25;
+}
+.todoExpedition {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--amber);
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+.todoProgressText {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--silver);
+}
+.todoProgressBar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.todoProgressBar > div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(56, 217, 150, 0.4);
+}
+
+.todoChecklist {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.todoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.todoItem:hover {
+  background: rgba(66, 232, 255, 0.08);
+  border-color: rgba(66, 232, 255, 0.2);
+}
+.todoItem.active {
+  background: rgba(66, 232, 255, 0.12);
+  border-color: rgba(66, 232, 255, 0.4);
+  box-shadow: inset 0 0 12px rgba(66, 232, 255, 0.1);
+}
+.todoItem.done {
+  opacity: 0.55;
+  text-decoration: line-through;
+  background: transparent;
+}
+.todoCheck {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--silver);
+  line-height: 1.3;
+}
+.todoItem.active .todoCheck {
+  color: var(--cyan);
+}
+.todoItem.done .todoCheck {
+  color: var(--green);
+  text-decoration: none;
+}
+.todoText {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--white);
+  flex: 1;
+}
+.todoItem.active .todoText {
+  font-weight: 600;
+  color: #fff;
+}
+.todoTargetBadge {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 800;
+  background: var(--amber);
+  color: #1a1005;
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.6px;
+  align-self: center;
+}
+
+.todoFooter {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.todoActionBtn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--white);
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+.todoActionBtn:hover {
+  background: rgba(66, 232, 255, 0.15);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+@media (max-width: 800px) {
+  #todoListHUD {
+    top: 60px;
+    left: 10px;
+    width: 250px;
+    padding: 8px 10px;
+  }
+  #todoTitle { font-size: 12px; }
+  .todoItem { padding: 4px 6px; }
+  .todoText { font-size: 10px; }
+}
+
+/* ========================================================
+   OPEN-WORLD COMPASS & NAVIGATION RIBBON
+   ======================================================== */
+#openWorldCompass {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, 86vw);
+  height: 32px;
+  background: rgba(6, 15, 27, 0.75);
+  border: 1px solid rgba(120, 222, 235, 0.3);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 16px;
+  backdrop-filter: blur(10px);
+  z-index: 15;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.compassBearing {
+  font-weight: 800;
+  color: var(--cyan);
+  letter-spacing: 1px;
+  min-width: 52px;
+  text-align: center;
+}
+.compassTicks {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 10px;
+}
+.compassTicks span.major {
+  color: var(--white);
+  font-weight: 700;
+}
+.compassPoi {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(255, 189, 105, 0.15);
+  border: 1px solid rgba(255, 189, 105, 0.4);
+  color: var(--amber);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* ========================================================
+   OUTPOST OPERATIONS & CONSTRAINT-BASED DECISION CONSOLE
+   ======================================================== */
+#decisionModal .card {
+  max-width: 760px;
+  background: linear-gradient(155deg, #091728 0%, #040c16 100%);
+  border: 1px solid rgba(120, 222, 235, 0.35);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85), 0 0 40px rgba(66, 232, 255, 0.15);
+}
+
+.opsFlowMeter {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1.2fr;
+  align-items: center;
+  gap: 10px;
+  background: rgba(10, 25, 42, 0.8);
+  border: 1px solid rgba(120, 222, 235, 0.25);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin: 16px 0;
+  font-family: var(--font-mono);
+}
+.opsFlowBlock {
+  text-align: center;
+}
+.opsFlowLabel {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.opsFlowVal {
+  font-size: 17px;
+  font-weight: 800;
+  font-family: var(--font-display);
+}
+.opsFlowOperator {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 800;
+}
+
+.opsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+.opsCard {
+  background: rgba(14, 30, 48, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.25s ease;
+}
+.opsCard:hover {
+  border-color: rgba(120, 222, 235, 0.4);
+  background: rgba(14, 30, 48, 0.85);
+}
+.opsCardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.opsCardTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  font-family: var(--font-display);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.opsCardStatus {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.opsCardStatus.good {
+  background: rgba(64, 187, 120, 0.2);
+  color: var(--green);
+  border: 1px solid rgba(64, 187, 120, 0.4);
+}
+.opsCardStatus.warn {
+  background: rgba(255, 189, 105, 0.2);
+  color: var(--amber);
+  border: 1px solid rgba(255, 189, 105, 0.4);
+}
+.opsCardStatus.danger {
+  background: rgba(255, 107, 107, 0.2);
+  color: var(--red);
+  border: 1px solid rgba(255, 107, 107, 0.4);
+}
+
+.opsCardBody p {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--silver);
+  margin: 4px 0 10px;
+}
+.tradeOffTag {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  margin-bottom: 12px;
+}
+.tradeOffTag .gain { color: var(--green); font-weight: 700; }
+.tradeOffTag .cost { color: var(--red); font-weight: 700; }
+
+.opsBtnGroup {
+  display: flex;
+  gap: 6px;
+}
+.opsBtnGroup button {
+  flex: 1;
+  padding: 7px 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--silver);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.opsBtnGroup button:hover {
+  background: rgba(66, 232, 255, 0.12);
+  border-color: var(--cyan);
+  color: var(--white);
+}
+.opsBtnGroup button.selected {
+  background: rgba(66, 232, 255, 0.25);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 12px rgba(66, 232, 255, 0.25);
+}
+.opsBtnGroup button.selected.warn {
+  background: rgba(255, 189, 105, 0.25);
+  border-color: var(--amber);
+  color: var(--amber);
+  box-shadow: 0 0 12px rgba(255, 189, 105, 0.25);
+}
+
+.drillSection {
+  background: rgba(255, 189, 105, 0.05);
+  border: 1px dashed rgba(255, 189, 105, 0.35);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-top: 14px;
+}
+.drillButtons {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.drillBtn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  border-radius: 7px;
+  background: rgba(255, 189, 105, 0.12);
+  border: 1px solid rgba(255, 189, 105, 0.4);
+  color: var(--amber);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.drillBtn:hover {
+  background: rgba(255, 189, 105, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Minimap Zoom Toggle */
+#mapZoomBtn {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(6, 15, 27, 0.85);
+  border: 1px solid rgba(120, 222, 235, 0.35);
+  color: var(--cyan);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 8px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 5;
+}
+#mapZoomBtn:hover {
+  background: rgba(66, 232, 255, 0.2);
+}
+
+/* ==========================================================================
+   INTENSIVE MISSION DILEMMA & REAL-TIME CONSEQUENCE SYSTEM
+   ========================================================================== */
+
+/* Active Debuff Bar on HUD */
+#activeDebuffBar {
+  position: absolute;
+  left: 20px;
+  top: 142px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.debuffPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  animation: debuffPulse 2.2s infinite ease-in-out;
+  transition: all 0.2s ease;
+}
+
+@keyframes debuffPulse {
+  0%, 100% { transform: scale(1); opacity: 0.95; }
+  50% { transform: scale(1.02); opacity: 1; }
+}
+
+.debuffPill.debuffSevere {
+  background: rgba(235, 50, 50, 0.25);
+  border: 1px solid rgba(255, 90, 90, 0.8);
+  color: #ff9e9e;
+  box-shadow: 0 0 12px rgba(255, 50, 50, 0.35);
+}
+
+.debuffPill.debuffCaution {
+  background: rgba(255, 170, 50, 0.22);
+  border: 1px solid rgba(255, 189, 105, 0.8);
+  color: #ffd8a8;
+  box-shadow: 0 0 12px rgba(255, 170, 50, 0.3);
+}
+
+.debuffPill.debuffPermanent {
+  background: rgba(185, 80, 255, 0.25);
+  border: 1px solid rgba(200, 120, 255, 0.8);
+  color: #e5b8ff;
+  box-shadow: 0 0 14px rgba(180, 70, 255, 0.35);
+}
+
+/* Dilemma Modal */
+.dilemmaBox {
+  max-width: 820px !important;
+  width: 95vw !important;
+  padding: 24px 28px !important;
+  background: radial-gradient(circle at top right, rgba(25, 40, 65, 0.96), rgba(8, 16, 28, 0.98)) !important;
+  border: 1px solid rgba(255, 189, 105, 0.45) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), 0 0 24px rgba(255, 189, 105, 0.15) !important;
+}
+
+.dilemmaHeader {
+  margin-bottom: 16px;
+}
+
+.dilemmaEyebrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.dilemmaBadgeAlert {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(255, 90, 90, 0.2);
+  border: 1px solid rgba(255, 90, 90, 0.6);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #ff8585;
+}
+
+.dilemmaMissionTag {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--amber);
+}
+
+.dilemmaBox h2 {
+  font-size: 20px;
+  margin: 0 0 4px;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+/* Problem Box */
+.dilemmaProblemBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 14px 18px;
+  background: rgba(255, 75, 75, 0.08);
+  border: 1px solid rgba(255, 100, 100, 0.35);
+  border-left: 4px solid #ff5a5a;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.dilemmaProblemIcon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.dilemmaProblemHeading {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  color: #ff9e9e;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.dilemmaProblemDesc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #e0eaf4;
+}
+
+/* Dual Choice Grid */
+.dilemmaChoiceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 680px) {
+  .dilemmaChoiceGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dilemmaCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: rgba(12, 22, 38, 0.85);
+  border: 1px solid var(--line);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dilemmaCard:hover {
+  transform: translateY(-2px);
+}
+
+.sacrificeCard {
+  border-color: rgba(66, 232, 255, 0.45);
+  box-shadow: 0 4px 18px rgba(66, 232, 255, 0.1);
+}
+
+.statusQuoCard {
+  border-color: rgba(255, 140, 50, 0.45);
+  box-shadow: 0 4px 18px rgba(255, 140, 50, 0.1);
+}
+
+.dilemmaCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.dilemmaCardType {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.tagSacrifice {
+  background: rgba(66, 232, 255, 0.18);
+  color: var(--cyan);
+  border: 1px solid rgba(66, 232, 255, 0.4);
+}
+
+.tagStatusQuo {
+  background: rgba(255, 170, 50, 0.18);
+  color: var(--amber);
+  border: 1px solid rgba(255, 170, 50, 0.4);
+}
+
+.dilemmaTradeSummary {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  font-family: var(--font-display);
+}
+
+.dilemmaCard h3 {
+  font-size: 15px;
+  margin: 0 0 6px;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.dilemmaCardDesc {
+  font-size: 11.5px;
+  color: #b0c4de;
+  line-height: 1.45;
+  margin: 0 0 14px;
+}
+
+.dilemmaImpactList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.dilemmaImpactItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.dilemmaImpactItem.cost {
+  background: rgba(255, 80, 80, 0.12);
+  border: 1px solid rgba(255, 90, 90, 0.35);
+  color: #ffb8b8;
+}
+
+.dilemmaImpactItem.gain {
+  background: rgba(60, 220, 130, 0.12);
+  border: 1px solid rgba(60, 220, 130, 0.35);
+  color: #98ffbe;
+}
+
+.impactIcon {
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.dilemmaImpactItem strong {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  margin-bottom: 2px;
+}
+
+.btnSacrifice {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 11.5px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  letter-spacing: 1px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(66, 232, 255, 0.25), rgba(40, 160, 200, 0.35));
+  border: 1px solid var(--cyan);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnSacrifice:hover {
+  background: linear-gradient(135deg, rgba(66, 232, 255, 0.45), rgba(40, 160, 200, 0.55));
+  box-shadow: 0 0 16px rgba(66, 232, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.btnStatusQuo {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 11.5px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  letter-spacing: 1px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(255, 140, 50, 0.2), rgba(200, 80, 30, 0.3));
+  border: 1px solid var(--amber);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnStatusQuo:hover {
+  background: linear-gradient(135deg, rgba(255, 140, 50, 0.35), rgba(200, 80, 30, 0.45));
+  box-shadow: 0 0 16px rgba(255, 140, 50, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Footnote Real-World Rule */
+.dilemmaFootnote {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(66, 232, 255, 0.06);
+  border: 1px solid rgba(66, 232, 255, 0.25);
+  border-radius: 6px;
+  font-size: 11px;
+  color: #b5d5ea;
+  line-height: 1.4;
+}
+
+.nasaInsigniaSmall {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Debrief Dilemma Log */
+.dilemmaDebriefCard {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.dilemmaDebriefCard.sacrifice {
+  background: rgba(66, 232, 255, 0.08);
+  border: 1px solid rgba(66, 232, 255, 0.35);
+}
+
+.dilemmaDebriefCard.statusQuo {
+  background: rgba(255, 150, 50, 0.08);
+  border: 1px solid rgba(255, 150, 50, 0.35);
+}
+
+.dilemmaDebriefHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.dilemmaDebriefBadge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.8px;
+}
+
+.dilemmaDebriefCard.sacrifice .dilemmaDebriefBadge {
+  background: rgba(66, 232, 255, 0.2);
+  color: var(--cyan);
+}
+
+.dilemmaDebriefCard.statusQuo .dilemmaDebriefBadge {
+  background: rgba(255, 150, 50, 0.2);
+  color: var(--amber);
+}
+
+.dilemmaDebriefChoice {
+  font-size: 11.5px;
+  color: #ffffff;
+  margin: 0 0 4px;
+}
+
+.dilemmaDebriefSummary {
+  font-size: 11px;
+  color: #c0d4e6;
+  margin: 0 0 6px;
+  line-height: 1.4;
+}
+
+.dilemmaDebriefRule {
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #9cb5cb;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+
+
