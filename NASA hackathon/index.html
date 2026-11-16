@@ -10,13 +10,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
+<!-- High-performance local Three.js with robust CDN fallback -->
+<script src="js/three.min.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script>
+if (!window.THREE) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\\/script>');
+if (!window.THREE || !window.THREE.OrbitControls) document.write('<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"><\\/script>');
 </script>
 <style>
 :root{
@@ -1114,16 +1113,12 @@ body.orbit-inspect main{opacity:.14;pointer-events:none}
 })();
 </script>
 
-<!-- ============ 3D SCENE (Three.js + Bloom + Procedural PBR Worlds + Modular Station) ============ -->
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-
+<!-- ============ 3D SCENE (Three.js + Procedural PBR Worlds + Modular Station) ============ -->
+<script>
 (() => {
+  const THREE = window.THREE;
+  if (!THREE) return;
+  const OrbitControls = THREE.OrbitControls || function() { return { enableDamping: false, enabled: false, update(){} }; };
   const canvas = document.getElementById('scene');
   if (!canvas) return;
 
@@ -1141,7 +1136,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_DPR));
   renderer.setSize(innerWidth, innerHeight, false);
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  if (THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
+  else if (renderer.outputEncoding !== undefined) renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.08;
   renderer.shadowMap.enabled = true;
@@ -1164,17 +1160,18 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
   controls.enabled = false;
   let inspectMode = false;
 
-  /* Post-processing Bloom with safe fallback */
   let composer = null;
   let bloomPass = null;
-  try {
-    composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
-    bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.42, 0.55, 0.78);
-    composer.addPass(bloomPass);
-    composer.addPass(new OutputPass());
-  } catch (e) {
-    composer = null;
+  if (typeof EffectComposer !== 'undefined') {
+    try {
+      composer = new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene, camera));
+      bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.42, 0.55, 0.78);
+      composer.addPass(bloomPass);
+      if (typeof OutputPass !== 'undefined') composer.addPass(new OutputPass());
+    } catch (e) {
+      composer = null;
+    }
   }
 
   /* ---------- Lighting & Sun Corona ---------- */
@@ -1306,7 +1303,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
     rx.putImageData(rimg, 0, 0);
 
     const map = new THREE.CanvasTexture(c);
-    map.colorSpace = THREE.SRGBColorSpace;
+    if (THREE.SRGBColorSpace) map.colorSpace = THREE.SRGBColorSpace;
+    else if (map.encoding !== undefined) map.encoding = THREE.sRGBEncoding;
     map.anisotropy = 8;
     const bump = new THREE.CanvasTexture(bc);
     const roughMap = new THREE.CanvasTexture(rc);
@@ -1331,7 +1329,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
     }
     cx.putImageData(img, 0, 0);
     const tex = new THREE.CanvasTexture(c);
-    tex.colorSpace = THREE.SRGBColorSpace;
+    if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+    else if (tex.encoding !== undefined) tex.encoding = THREE.sRGBEncoding;
     return tex;
   }
 
@@ -1351,7 +1350,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
       ctx.fillRect(0, 0, S, S);
     }
     const tex = new THREE.CanvasTexture(c);
-    tex.colorSpace = THREE.SRGBColorSpace;
+    if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+    else if (tex.encoding !== undefined) tex.encoding = THREE.sRGBEncoding;
     return tex;
   }
 

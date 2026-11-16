@@ -3016,8 +3016,9 @@
     </div>
   </div>
 
-  <!-- Three.js 3D Engine -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Three.js 3D Engine (Local first for 100% offline & fast reliable load, with CDN fallback) -->
+  <script src="js/three.min.js"></script>
+  <script>if (!window.THREE) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\\/script>');</script>
 
   <script>
     (function () {
@@ -3569,12 +3570,42 @@
 
       const sky = mesh(geometry('SphereGeometry', 1400, 32, 20), skyMaterial, scene, 0, 0, 0, false);
 
-      /* Authentic NASA 360° Photorealistic Panoramic Backdrop */
+      /* Authentic NASA 360° Photorealistic Panoramic Backdrop with Instant Procedural Fallback */
+      function makeProceduralPanorama(colorTop, colorMid) {
+        const c = document.createElement('canvas'); c.width = 512; c.height = 256;
+        const cx = c.getContext('2d');
+        const g = cx.createLinearGradient(0, 0, 0, 256);
+        g.addColorStop(0, colorTop);
+        g.addColorStop(0.55, colorMid);
+        g.addColorStop(1, '#060d1b');
+        cx.fillStyle = g; cx.fillRect(0, 0, 512, 256);
+        cx.fillStyle = 'rgba(234, 246, 255, 0.75)';
+        for (let i = 0; i < 220; i++) {
+          const sx = Math.random() * 512, sy = Math.random() * 150, sz = Math.random() * 1.6 + 0.4;
+          cx.fillRect(sx, sy, sz, sz);
+        }
+        const t = new THREE.CanvasTexture(c);
+        t.wrapS = THREE.RepeatWrapping;
+        return t;
+      }
+      const defaultMoonTex = makeProceduralPanorama('#020612', '#0a1628');
+      const defaultMarsTex = makeProceduralPanorama('#2b140b', '#6d3622');
+
       const textureLoader = new THREE.TextureLoader();
-      const moonPanoramaTex = textureLoader.load('assets/moon_panorama.jpg');
-      moonPanoramaTex.wrapS = THREE.RepeatWrapping;
-      const marsPanoramaTex = textureLoader.load('assets/mars_panorama.jpg');
-      marsPanoramaTex.wrapS = THREE.RepeatWrapping;
+      let moonPanoramaTex = defaultMoonTex;
+      let marsPanoramaTex = defaultMarsTex;
+      try {
+        textureLoader.load('assets/moon_panorama.jpg', tex => {
+          tex.wrapS = THREE.RepeatWrapping;
+          moonPanoramaTex = tex;
+          if (environment === 'moon' && panoramaMat) { panoramaMat.map = tex; panoramaMat.needsUpdate = true; }
+        });
+        textureLoader.load('assets/mars_panorama.jpg', tex => {
+          tex.wrapS = THREE.RepeatWrapping;
+          marsPanoramaTex = tex;
+          if (environment === 'mars' && panoramaMat) { panoramaMat.map = tex; panoramaMat.needsUpdate = true; }
+        });
+      } catch (_) {}
 
       const panoramaGeo = new THREE.CylinderGeometry(850, 850, 320, 64, 1, true);
       const panoramaMat = new THREE.MeshBasicMaterial({
@@ -4070,12 +4101,25 @@
 
       // Mounted Exterior NASA High-Definition Observation Screen
       const videoElem = $('#nasaVideoPlayer');
-      const videoTex = new THREE.VideoTexture(videoElem);
-      videoTex.minFilter = THREE.LinearFilter;
-      videoTex.magFilter = THREE.LinearFilter;
-      videoTex.encoding = THREE.sRGBEncoding;
+      let labScreenMat;
+      try {
+        const videoTex = new THREE.VideoTexture(videoElem);
+        videoTex.minFilter = THREE.LinearFilter;
+        videoTex.magFilter = THREE.LinearFilter;
+        videoTex.encoding = THREE.sRGBEncoding;
+        labScreenMat = new THREE.MeshBasicMaterial({ map: videoTex });
+      } catch (_) {
+        const sc = document.createElement('canvas'); sc.width = 256; sc.height = 160;
+        const sctx = sc.getContext('2d');
+        sctx.fillStyle = '#061324'; sctx.fillRect(0, 0, 256, 160);
+        sctx.fillStyle = '#46d9ff'; sctx.font = 'bold 14px monospace'; sctx.fillText('NASA SDO FEED', 20, 40);
+        sctx.fillStyle = '#ffbd69'; sctx.font = '11px monospace'; sctx.fillText('SOLAR CORONA AIA 193Å', 20, 70);
+        sctx.fillStyle = '#50dda5'; sctx.fillText('FLEET LINK: NOMINAL', 20, 100);
+        const fallbackTex = new THREE.CanvasTexture(sc);
+        labScreenMat = new THREE.MeshBasicMaterial({ map: fallbackTex });
+      }
       box(5.4, 3.3, 0.2, dark, lab, 0, 3.3, 3.8);
-      const labScreen = mesh(geometry('PlaneGeometry', 5.0, 2.9), new THREE.MeshBasicMaterial({ map: videoTex }), lab, 0, 3.3, 3.92);
+      const labScreen = mesh(geometry('PlaneGeometry', 5.0, 2.9), labScreenMat, lab, 0, 3.3, 3.92);
       stationLabel(lab, 'SCIENCE LAB & NASA FEED', '07 / REAL-TIME MISSION VIDEO', 8.5); addCollider(27, 8, 4);
 
       /* 08: Radiation Storm Shelter (Walk-In Safe Haven) */
@@ -6107,6 +6151,8 @@
 
       function startGame() {
         Audio.init(); Audio.good(); G.session++; resetInput(); clearSamples();
+        const ld = $('#loading'); if (ld) ld.classList.add('hidden');
+        window.G = G;
         Object.assign(G, {
           mission: 0, step: 0, xp: 0, oxygen: 100, water: 100, food: 100, power: 85, suit: 100,
           time: 0, hold: 0, held: false, panels: 0, collected: 0, timer: 0, storm: false,
