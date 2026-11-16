@@ -472,24 +472,26 @@ const OutpostMissionSystem = (() => {
     renderTodoListHUD();
   }
 
-  function updateRoverDrive(dt, inputKeys, camYaw) {
+  function updateRoverDrive(dt, inputKeys, camYaw, inputObj) {
     if (!isDrivingRover || !roverRef) return;
 
-    let forward = (inputKeys.up ? 1 : 0) - (inputKeys.down ? 1 : 0);
-    let steer = (inputKeys.left ? 1 : 0) - (inputKeys.right ? 1 : 0);
+    const joyX = (inputObj && typeof inputObj.x === 'number') ? inputObj.x : 0;
+    const joyY = (inputObj && typeof inputObj.y === 'number') ? inputObj.y : 0;
 
-    const speed = 11.5; // m/s (faster than astronaut walking)
+    let forward = (inputKeys.up ? 1 : 0) - (inputKeys.down ? 1 : 0) + joyY;
+    let steer = (inputKeys.left ? 1 : 0) - (inputKeys.right ? 1 : 0) - joyX;
+
+    const isBoosting = !!(inputKeys.sprint || inputKeys.shift || (inputObj && inputObj.sprint));
+    const activeSpeed = isBoosting ? 18.5 : 12.0;
     const turnRate = 2.4;
 
     // Steering
-    if (steer !== 0) {
+    if (Math.abs(steer) > 0.04) {
       roverRef.rotation.y += steer * turnRate * dt;
     }
 
     // Forward/Backward driving with Shift / Sprint turbo boost across open world
-    if (forward !== 0) {
-      const isBoosting = !!(inputKeys.sprint || inputKeys.shift);
-      const activeSpeed = isBoosting ? 18.5 : 12.0;
+    if (Math.abs(forward) > 0.04) {
       const dir = new THREE.Vector3(Math.cos(roverRef.rotation.y), 0, -Math.sin(roverRef.rotation.y));
       roverRef.position.addScaledVector(dir, forward * activeSpeed * dt);
 

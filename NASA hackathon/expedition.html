@@ -872,6 +872,21 @@
       font-size: 9px;
     }
 
+    .touchBtn.jump {
+      width: 56px;
+      height: 56px;
+      background: rgba(70, 217, 255, 0.22);
+      color: #eaf6ff;
+      border: 1px solid var(--cyan);
+      box-shadow: 0 0 16px rgba(70, 217, 255, 0.25);
+      font-size: 10px;
+    }
+
+    .touchBtn.jump:active {
+      background: rgba(70, 217, 255, 0.45);
+      transform: scale(0.94);
+    }
+
     #lookHint {
       position: absolute;
       bottom: 15px;
@@ -2415,8 +2430,11 @@
       <div class="pilotID"><span class="liveDot"></span>CADET 01 <span>/ SURFACE OPERATIONS</span></div>
       <div class="controlKeys">
         <span class="key">WASD</span>MOVE<span class="spacer"></span>
+        <span class="key">SPACE</span>LOW-G JUMP<span class="spacer"></span>
         <span class="key">SHIFT</span>SPRINT<span class="spacer"></span>
         <span class="key">E</span>USE<span class="spacer"></span>
+        <span class="key">Q</span>CAMERA<span class="spacer"></span>
+        <span class="key">C</span>VIEW<span class="spacer"></span>
         <span class="key">T</span>SYSTEMS<span class="spacer"></span>
         <span class="key">M</span>MAP<span class="spacer"></span>
         DRAG TO LOOK
@@ -2437,6 +2455,7 @@
       </div>
       <div id="touchActions">
         <button class="touchBtn sprint" id="sprintButton">RUN</button>
+        <button class="touchBtn jump" id="jumpButton">JUMP</button>
         <button class="touchBtn" id="interactButton">USE / E</button>
       </div>
       <div id="lookHint">DRAG OPEN SPACE TO LOOK</div>
@@ -2504,12 +2523,11 @@
       <div class="quickLaunchHint">⚡ Click button above, press [ENTER], or click the active mode card to launch instantly</div>
 
       <div class="menuControls" id="menuControlDesktop">
-        <span><b>WASD</b> move · <b>Drag</b> look</span>
-        <span><b>E</b> interact · <b>Shift</b> sprint</span>
+        <span><b>WASD</b> move · <b>Space</b> low-g jump · <b>Drag</b> look around</span>
+        <span><b>E</b> interact · <b>Shift</b> sprint · <b>Q / C</b> camera · <b>M</b> tactical map</span>
       </div>
       <div class="menuControls" id="menuControlTouch">
-        <span><b>Left joystick</b> to move · <b>Drag scene</b> to turn<br><b>USE</b> to talk, experiment, and
-          harvest</span>
+        <span><b>Virtual Joystick</b> move · <b>Jump & Run</b> buttons<br><b>Drag surface</b> look around · <b>USE</b> talk & interact</span>
       </div>
     </div>
 
@@ -4344,6 +4362,8 @@
       player.position.copy(surface(0, 16)); player.rotation.y = Math.PI;
       window._roverRef = rover;
       window._playerRef = player;
+      window.player = player;
+      window.terrainHeight = terrainHeight;
 
       /* NPC Specialists */
       const npcDefinitions = [
@@ -5162,6 +5182,7 @@
       };
 
       const input = { keys: {}, x: 0, y: 0, sprint: false };
+      window.input = input;
       const cam = { yaw: 0, pitch: 0.37, distance: 10.5, pos: new THREE.Vector3(49, 34, 55), look: new THREE.Vector3(0, 3, -5) };
       const D = { lines: [], index: 0, chars: 0, cb: null };
       const Q = { list: [], index: 0, answered: false, cb: null, key: '' };
@@ -5174,8 +5195,13 @@
       function resetInput() {
         input.keys = {}; input.x = 0; input.y = 0; input.sprint = false;
         G.held = false; G.hold = 0;
-        $('#nub').style.transform = 'translate(0,0)';
+        const nub = $('#nub');
+        if (nub) nub.style.transform = 'translate(0,0)';
         pointerMap.clear(); joystickId = null;
+        if (typeof player !== 'undefined' && player && player.userData) {
+          player.userData.vx = 0;
+          player.userData.vz = 0;
+        }
       }
 
       function state(next) {
@@ -5814,7 +5840,26 @@
       /* Input Handling */
       const pointerMap = new Map();
       let pinch = 0, joystickId = null;
-      const codeMap = { KeyW: 'up', ArrowUp: 'up', KeyS: 'down', ArrowDown: 'down', KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right' };
+      const codeMap = {
+        KeyW: 'up', ArrowUp: 'up',
+        KeyS: 'down', ArrowDown: 'down',
+        KeyA: 'left', ArrowLeft: 'left',
+        KeyD: 'right', ArrowRight: 'right',
+        KeyQ: 'camLeft'
+      };
+
+      function triggerJump() {
+        if (G.state !== 'playing') return;
+        if (typeof OutpostMissionSystem !== 'undefined' && OutpostMissionSystem.isDrivingRover) return;
+        if (!player || !player.userData || player.userData.isGrounded === false) return;
+
+        // Authentic Low-G leap (Moon: 0.16g float, Mars: 0.38g float)
+        const jumpVelocity = (environment === 'moon' ? 4.8 : 4.1);
+        player.userData.vy = jumpVelocity;
+        player.userData.isGrounded = false;
+        Audio.init();
+        if (typeof Audio !== 'undefined' && Audio.tone) Audio.tone(320, 0.12, 'sine', 0.2);
+      }
 
       /* NASA Live Video Channels & Space Weather Modal Handlers */
       const NASA_VIDEO_FEEDS = {
@@ -5959,14 +6004,35 @@
           startGame();
           return;
         }
+        if (e.code === 'KeyC' && !e.repeat) {
+          e.preventDefault();
+          cam.distance = (cam.distance < 9 ? 12.5 : 7.2);
+          if (typeof Audio !== 'undefined' && Audio.tick) Audio.tick();
+          return;
+        }
         if (G.state === 'dialogue' && ['KeyE', 'Enter', 'Space'].includes(e.code)) {
           e.preventDefault(); if (!e.repeat) dialogueNext(); return;
         }
         if (G.state !== 'playing') return;
         if (codeMap[e.code]) { e.preventDefault(); input.keys[codeMap[e.code]] = true; }
         if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') { input.sprint = true; e.preventDefault(); }
-        if (e.code === 'KeyE' || e.code === 'Space') {
+        if (e.code === 'KeyE') {
           e.preventDefault(); if (!e.repeat) { interactPress(); if (G.state === 'playing') G.held = true; }
+        }
+        if (e.code === 'Space') {
+          e.preventDefault(); if (!e.repeat) triggerJump();
+        }
+      });
+
+      window.addEventListener('keyup', e => {
+        if (codeMap[e.code]) {
+          input.keys[codeMap[e.code]] = false;
+        }
+        if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+          input.sprint = false;
+        }
+        if (e.code === 'KeyE') {
+          G.held = false;
         }
       });
 
@@ -5974,7 +6040,9 @@
       canvas.addEventListener('contextmenu', e => e.preventDefault());
       canvas.addEventListener('pointerdown', e => {
         if (G.state !== 'playing') return;
-        Audio.init(); canvas.setPointerCapture(e.pointerId); pointerMap.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        Audio.init();
+        try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+        pointerMap.set(e.pointerId, { x: e.clientX, y: e.clientY });
         if (pointerMap.size === 2) {
           const a = [...pointerMap.values()]; pinch = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
         }
@@ -5992,7 +6060,10 @@
         }
       });
 
-      ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => canvas.addEventListener(ev, e => pointerMap.delete(e.pointerId)));
+      ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => {
+        window.addEventListener(ev, e => pointerMap.delete(e.pointerId));
+        canvas.addEventListener(ev, e => pointerMap.delete(e.pointerId));
+      });
       canvas.addEventListener('wheel', e => {
         if (G.state !== 'playing') return; e.preventDefault();
         cam.distance = clamp(cam.distance + Math.sign(e.deltaY) * 0.7, 5, 17);
@@ -6009,7 +6080,9 @@
       }
       stick.addEventListener('pointerdown', e => {
         if (G.state !== 'playing' || joystickId !== null) return;
-        e.preventDefault(); Audio.init(); joystickId = e.pointerId; stick.setPointerCapture(e.pointerId); moveStick(e);
+        e.preventDefault(); Audio.init(); joystickId = e.pointerId;
+        try { stick.setPointerCapture(e.pointerId); } catch (_) {}
+        moveStick(e);
       });
       stick.addEventListener('pointermove', e => {
         if (e.pointerId === joystickId) { e.preventDefault(); moveStick(e); }
@@ -6022,11 +6095,25 @@
 
       function holdButton(id, down, up) {
         const b = $(id);
-        b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); Audio.init(); down(); });
+        if (!b) return;
+        b.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          try { b.setPointerCapture(e.pointerId); } catch (_) {}
+          Audio.init();
+          down();
+        });
         ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => b.addEventListener(ev, e => { e.preventDefault(); up(); }));
       }
       holdButton('#interactButton', () => { if (G.state === 'playing') { interactPress(); if (G.state === 'playing') G.held = true; } }, () => G.held = false);
       holdButton('#sprintButton', () => { if (G.state === 'playing') input.sprint = true; }, () => input.sprint = false);
+      const jumpBtn = $('#jumpButton');
+      if (jumpBtn) {
+        jumpBtn.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          Audio.init();
+          if (G.state === 'playing') triggerJump();
+        });
+      }
 
       window.addEventListener('blur', () => { resetInput(); if (G.state === 'playing') pauseGame(); });
       document.addEventListener('visibilitychange', () => { if (document.hidden) { resetInput(); if (G.state === 'playing') pauseGame(); } });
@@ -6251,17 +6338,36 @@
       let footTimer = 0;
       function animateCharacter(m, moving, sprint, dt) {
         const u = m.userData;
-        u.phase += dt * (moving ? (sprint ? 10 : 6.8) : 1);
-        const sw = moving ? Math.sin(u.phase) * (sprint ? 0.65 : 0.48) : 0, blend = 1 - Math.exp(-12 * dt);
-        u.armL.rotation.x = lerp(u.armL.rotation.x, -sw * 0.8, blend);
-        u.armR.rotation.x = lerp(u.armR.rotation.x, sw * 0.8, blend);
-        u.armL.rotation.z = 0.09; u.armR.rotation.z = -0.09;
-        if (!u.robot) {
-          u.legL.rotation.x = lerp(u.legL.rotation.x, sw, blend);
-          u.legR.rotation.x = lerp(u.legR.rotation.x, -sw, blend);
+        const isPlayerAirborne = (m === player && u.isGrounded === false);
+
+        if (isPlayerAirborne) {
+          // Low-G Airborne floating pose: arms out for balance, legs bent gracefully
+          const blend = 1 - Math.exp(-8 * dt);
+          u.armL.rotation.x = lerp(u.armL.rotation.x, -0.45, blend);
+          u.armR.rotation.x = lerp(u.armR.rotation.x, -0.45, blend);
+          u.armL.rotation.z = 0.35;
+          u.armR.rotation.z = -0.35;
+          if (!u.robot) {
+            u.legL.rotation.x = lerp(u.legL.rotation.x, -0.28, blend);
+            u.legR.rotation.x = lerp(u.legR.rotation.x, 0.42, blend);
+          }
+        } else {
+          u.phase += dt * (moving ? (sprint ? 10 : 6.8) : 1);
+          const sw = moving ? Math.sin(u.phase) * (sprint ? 0.65 : 0.48) : 0, blend = 1 - Math.exp(-12 * dt);
+          u.armL.rotation.x = lerp(u.armL.rotation.x, -sw * 0.8, blend);
+          u.armR.rotation.x = lerp(u.armR.rotation.x, sw * 0.8, blend);
+          u.armL.rotation.z = 0.09; u.armR.rotation.z = -0.09;
+          if (!u.robot) {
+            u.legL.rotation.x = lerp(u.legL.rotation.x, sw, blend);
+            u.legR.rotation.x = lerp(u.legR.rotation.x, -sw, blend);
+          }
         }
-        const hop = moving ? Math.pow(Math.sin(u.phase), 2) * (environment === 'moon' ? 0.09 : 0.055) : Math.sin(visualTime * 1.7) * 0.008;
-        m.position.y = terrainHeight(m.position.x, m.position.z) + hop;
+
+        // Only update position.y for NPCs here. Player position.y is handled in updatePlayer physics!
+        if (m !== player) {
+          const hop = moving ? Math.pow(Math.sin(u.phase), 2) * (environment === 'moon' ? 0.09 : 0.055) : Math.sin(visualTime * 1.7) * 0.008;
+          m.position.y = terrainHeight(m.position.x, m.position.z) + hop;
+        }
       }
 
       function updateSimulation(dt, moving, sprinting) {
@@ -6457,45 +6563,91 @@
 
       function updatePlayer(dt) {
         if (typeof OutpostMissionSystem !== 'undefined' && OutpostMissionSystem.isDrivingRover) {
-          OutpostMissionSystem.updateRoverDrive(dt, input.keys, cam.yaw);
+          OutpostMissionSystem.updateRoverDrive(dt, input.keys, cam.yaw, input);
           G.time += dt;
           updateSimulation(dt, false, false);
           return;
         }
+
+        // Optional keyboard camera swivel (Q key)
+        if (input.keys.camLeft) cam.yaw += 2.0 * dt;
+
         let right = (input.keys.right ? 1 : 0) - (input.keys.left ? 1 : 0) + input.x;
         let forward = (input.keys.up ? 1 : 0) - (input.keys.down ? 1 : 0) + input.y;
         const magnitude = Math.hypot(right, forward);
         if (magnitude > 1) { right /= magnitude; forward /= magnitude; }
         const moving = magnitude > 0.08, sprinting = moving && input.sprint;
 
+        const staminaMult = G.modifiers?.sprintStaminaMult || 1.0;
+        const moveMult = G.modifiers?.moveSpeedMult || 1.0;
+        const speed = (sprinting ? 7.6 * staminaMult : 4.7) * moveMult;
+
+        let dx = 0, dz = 0;
         if (moving) {
-          const dx = right * Math.cos(cam.yaw) - forward * Math.sin(cam.yaw);
-          const dz = -right * Math.sin(cam.yaw) - forward * Math.cos(cam.yaw);
-          const staminaMult = G.modifiers?.sprintStaminaMult || 1.0;
-          const moveMult = G.modifiers?.moveSpeedMult || 1.0;
-          const speed = (sprinting ? 7.6 * staminaMult : 4.7) * moveMult;
-          player.position.x += dx * speed * dt;
-          player.position.z += dz * speed * dt;
-          pushOut(player.position, 0.37);
+          dx = right * Math.cos(cam.yaw) - forward * Math.sin(cam.yaw);
+          dz = -right * Math.sin(cam.yaw) - forward * Math.cos(cam.yaw);
+        }
 
-          // Open-World 440m exploration perimeter
-          const d = Math.hypot(player.position.x, player.position.z);
-          if (d > 440) {
-            player.position.x *= 440 / d; player.position.z *= 440 / d;
-            if (!G.warned.has('perimeter')) {
-              G.warned.add('perimeter');
-              toast('⚠️ EVA BOUNDARY: Reached exploration sector perimeter (440m).', 'warn');
-            }
-          } else {
-            G.warned.delete('perimeter');
+        // Horizontal inertia with smooth acceleration & responsive deceleration
+        const targetVx = moving ? dx * speed : 0;
+        const targetVz = moving ? dz * speed : 0;
+        const accelRate = moving ? (1 - Math.exp(-22 * dt)) : (1 - Math.exp(-18 * dt));
+        player.userData.vx = lerp(player.userData.vx || 0, targetVx, accelRate);
+        player.userData.vz = lerp(player.userData.vz || 0, targetVz, accelRate);
+
+        player.position.x += (player.userData.vx || 0) * dt;
+        player.position.z += (player.userData.vz || 0) * dt;
+        pushOut(player.position, 0.37);
+
+        // Open-World 440m exploration perimeter
+        const d = Math.hypot(player.position.x, player.position.z);
+        if (d > 440) {
+          player.position.x *= 440 / d; player.position.z *= 440 / d;
+          if (!G.warned.has('perimeter')) {
+            G.warned.add('perimeter');
+            toast('⚠️ EVA BOUNDARY: Reached exploration sector perimeter (440m).', 'warn');
           }
+        } else {
+          G.warned.delete('perimeter');
+        }
 
+        // Character facing movement direction
+        if (moving) {
           const desired = Math.atan2(dx, dz);
           const delta = Math.atan2(Math.sin(desired - player.rotation.y), Math.cos(desired - player.rotation.y));
-          player.rotation.y += delta * (1 - Math.exp(-12 * dt));
+          player.rotation.y += delta * (1 - Math.exp(-14 * dt));
+        }
 
-          footTimer += dt;
-          if (footTimer > (sprinting ? 0.29 : 0.45)) { footTimer = 0; Audio.noise(0.075, 0.075, 430); }
+        // Vertical physics & Low-G Jumping
+        const groundY = terrainHeight(player.position.x, player.position.z);
+        if (player.userData.isGrounded === undefined) {
+          player.userData.isGrounded = true;
+          player.userData.vy = 0;
+        }
+
+        if (!player.userData.isGrounded) {
+          // Low gravity simulation: Moon is ~1.62 m/s^2, Mars is ~3.72 m/s^2
+          const gravity = (environment === 'moon' ? 7.2 : 9.8);
+          player.userData.vy -= gravity * dt;
+          player.position.y += player.userData.vy * dt;
+
+          if (player.position.y <= groundY) {
+            player.position.y = groundY;
+            if (Math.abs(player.userData.vy) > 1.2) {
+              Audio.noise(0.08, 0.07, 240); // Soft lunar landing dust thud
+            }
+            player.userData.vy = 0;
+            player.userData.isGrounded = true;
+          }
+        } else {
+          const hop = moving ? Math.pow(Math.sin(player.userData.phase || 0), 2) * (environment === 'moon' ? 0.09 : 0.055) : Math.sin(visualTime * 1.7) * 0.008;
+          player.position.y = groundY + hop;
+
+          // Footstep audio only when grounded on the surface
+          if (moving) {
+            footTimer += dt;
+            if (footTimer > (sprinting ? 0.29 : 0.45)) { footTimer = 0; Audio.noise(0.075, 0.075, 430); }
+          }
         }
 
         animateCharacter(player, moving, sprinting, dt);
