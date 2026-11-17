@@ -2088,7 +2088,7 @@
       box-shadow: 0 0 14px rgba(255, 189, 105, 0.2);
     }
   </style>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=2.2">
 </head>
 
 <body>
@@ -3035,7 +3035,7 @@
   </div>
 
   <!-- Three.js 3D Engine (Local first for 100% offline & fast reliable load, with CDN fallback) -->
-  <script src="js/three.min.js"></script>
+  <script src="js/three.min.js?v=2.2"></script>
   <script>if (!window.THREE) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\\/script>');</script>
 
   <script>
@@ -3467,7 +3467,10 @@
         reflectionFaces.push(c);
       }
       const envMap = new THREE.CubeTexture(reflectionFaces);
-      envMap.encoding = THREE.sRGBEncoding; envMap.needsUpdate = true;
+      envMap.generateMipmaps = false;
+      envMap.minFilter = THREE.LinearFilter;
+      envMap.encoding = THREE.sRGBEncoding;
+      envMap.needsUpdate = true;
 
       /* Materials */
       const materials = {};
@@ -3784,6 +3787,7 @@
       marsMoons.add(deimos);
 
       /* Lights */
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.45); scene.add(ambientLight);
       const hemi = new THREE.HemisphereLight(0xc8e0ff, 0x514a43, 0.72); scene.add(hemi);
       const sun = new THREE.DirectionalLight(0xffefda, 2.8);
       sun.position.set(-55, 70, -50);
@@ -6212,6 +6216,16 @@
       $('#resumeButton').onclick = resumeGame;
       $('#soundButton').onclick = () => Audio.toggle();
 
+      function resize() {
+        const w = window.innerWidth, h = window.innerHeight;
+        if (!camera || !renderer) return;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h, false);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, highQuality ? 1.7 : 1.15));
+      }
+      window.addEventListener('resize', resize, { passive: true });
+
       function changeQuality() {
         highQuality = !highQuality;
         renderer.setPixelRatio(Math.min(devicePixelRatio || 1, highQuality ? 1.7 : 1));
@@ -6238,7 +6252,7 @@
 
       function startGame() {
         Audio.init(); Audio.good(); G.session++; resetInput(); clearSamples();
-        const ld = $('#loading'); if (ld) ld.classList.add('hidden');
+        const ld = $('#loading'); if (ld) { ld.classList.add('hidden'); ld.style.display = 'none'; }
         window.G = G;
         Object.assign(G, {
           mission: 0, step: 0, xp: 0, oxygen: 100, water: 100, food: 100, power: 85, suit: 100,
@@ -6888,9 +6902,14 @@
           protonMat.opacity = lerp(protonMat.opacity, stormActive ? 0.75 : 0.0, dt * 2.0);
 
           if (scene.fog) {
-            const baseDensity = (environment === 'moon' ? 0.00065 : 0.0016);
-            const targetDensity = (typeof OutpostOps !== 'undefined' && OutpostOps.dustStormActive) ? 0.0055 : (stormActive ? baseDensity * 2.2 : baseDensity);
-            scene.fog.density = lerp(scene.fog.density, targetDensity, dt * 1.5);
+            const baseFar = (environment === 'moon' ? 480 : 440);
+            const targetFar = (typeof OutpostOps !== 'undefined' && OutpostOps.dustStormActive) ? 140 : (stormActive ? baseFar * 0.65 : baseFar);
+            if ('far' in scene.fog) scene.fog.far = lerp(scene.fog.far, targetFar, dt * 1.5);
+            if ('density' in scene.fog) {
+              const baseDensity = (environment === 'moon' ? 0.00065 : 0.0016);
+              const targetDensity = (typeof OutpostOps !== 'undefined' && OutpostOps.dustStormActive) ? 0.0055 : (stormActive ? baseDensity * 2.2 : baseDensity);
+              scene.fog.density = lerp(scene.fog.density, targetDensity, dt * 1.5);
+            }
           }
 
           if (stormActive) {
@@ -7132,11 +7151,15 @@
 
       $('#startButton').disabled = false;
       $('#startButton').innerHTML = '<span class="startBtnText">🚀 BEGIN EXPEDITION</span><span class="startBtnSub">PRESS [ENTER] ↗</span>';
-      $('#loading').classList.add('hidden');
+      const ldEl = $('#loading');
+      if (ldEl) { ldEl.classList.add('hidden'); ldEl.style.display = 'none'; }
 
       canvas.addEventListener('webglcontextlost', e => {
         e.preventDefault(); if (G.state === 'playing') pauseGame();
         error('WebGL context lost. Please reload the outpost simulation.');
+      });
+      canvas.addEventListener('webglcontextrestored', () => {
+        location.reload();
       });
 
       frame();
@@ -7146,30 +7169,35 @@
     })();
   </script>
   <!-- NASA Open API Subsystems & Key Configuration -->
-  <script src="api/config.js"></script>
-  <script src="api/nasa.js"></script>
-  <script src="api/api-manager.js"></script>
+  <script src="api/config.js?v=2.2"></script>
+  <script src="api/nasa.js?v=2.2"></script>
+  <script src="api/api-manager.js?v=2.2"></script>
 
   <!-- Modular NASA Junior Astronaut Systems -->
-  <script src="js/audio.js"></script>
-  <script src="js/profile.js"></script>
-  <script src="js/nova.js"></script>
-  <script src="js/academy.js"></script>
-  <script src="js/missions.js"></script>
-  <script src="js/planetarium.js"></script>
-  <script src="js/laboratory.js"></script>
-  <script src="js/simulator.js"></script>
-  <script src="js/achievements.js"></script>
-  <script src="js/certificate.js"></script>
-  <script src="js/tactical-map.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/audio.js?v=2.2"></script>
+  <script src="js/profile.js?v=2.2"></script>
+  <script src="js/nova.js?v=2.2"></script>
+  <script src="js/academy.js?v=2.2"></script>
+  <script src="js/missions.js?v=2.2"></script>
+  <script src="js/planetarium.js?v=2.2"></script>
+  <script src="js/laboratory.js?v=2.2"></script>
+  <script src="js/simulator.js?v=2.2"></script>
+  <script src="js/achievements.js?v=2.2"></script>
+  <script src="js/certificate.js?v=2.2"></script>
+  <script src="js/tactical-map.js?v=2.2"></script>
+  <script src="js/main.js?v=2.2"></script>
   <script>
-    // Initialize Master App Router
-    window.addEventListener('DOMContentLoaded', () => {
-      if (typeof AppRouter !== 'undefined') {
+    // Initialize Master App Router safely whether DOM is ready or still loading
+    function initAppRouter() {
+      if (typeof AppRouter !== 'undefined' && typeof AppRouter.init === 'function') {
         AppRouter.init();
       }
-    });
+    }
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', initAppRouter);
+    } else {
+      initAppRouter();
+    }
   </script>
 
 </body>
